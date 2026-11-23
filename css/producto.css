@@ -3,12 +3,6 @@
 .producto { padding-bottom: var(--space-6); }
 #vista { display: grid; gap: var(--space-3); }
 
-.navegacion { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-
-.progreso { display: flex; gap: 4px; }
-.progreso span { flex: 1; height: 5px; border-radius: 3px; background: var(--color-line); }
-.progreso .completo { background: var(--color-accent); }
-
 .disposicion { display: grid; gap: var(--space-5); margin-top: var(--space-2); }
 
 .ficha { display: grid; gap: var(--space-3); align-content: start; }
@@ -81,13 +75,6 @@
   outline: 3px solid var(--color-accent);
   outline-offset: 3px;
 }
-
-/* Confirmación y producto no encontrado */
-.aviso { display: grid; justify-items: start; gap: var(--space-3); max-width: 32rem; padding-block: var(--space-5); }
-.aviso h1 { font-size: clamp(1.5rem, 5vw, 2rem); }
-.aviso h1:focus { outline: none; }
-.aviso p { color: var(--color-muted); }
-.acciones { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 
 @media (min-width: 860px) {
   .disposicion { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }

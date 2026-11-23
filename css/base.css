@@ -140,6 +140,19 @@ legend { padding: 0; }
 .ayuda { color: var(--color-muted); font-size: 0.8125rem; }
 .error { color: #9E2F15; font-size: 0.875rem; font-weight: 500; }
 
+/* Pasos del flujo (producto → cotización → folio) */
+.navegacion { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.progreso { display: flex; gap: 4px; }
+.progreso span { flex: 1; height: 5px; border-radius: 3px; background: var(--color-line); }
+.progreso .completo { background: var(--color-accent); }
+
+/* Mensajes a pantalla completa (confirmación, vacío, no encontrado) */
+.aviso { display: grid; justify-items: start; gap: var(--space-3); max-width: 32rem; padding-block: var(--space-5); }
+.aviso h1 { font-size: clamp(1.5rem, 5vw, 2rem); }
+.aviso h1:focus { outline: none; }
+.aviso p { color: var(--color-muted); }
+.acciones { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
