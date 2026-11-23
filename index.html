@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LooArt | Productos personalizados</title>
+  <meta name="description" content="Elige tu producto, cuéntanos tu idea y recibe tu cotización por WhatsApp.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/catalogo.css">
+</head>
+<body>
+
+  <header class="contenedor cabecera">
+    <a class="logo" href="index.html" aria-label="LooArt, ir al catálogo">Loo<span>Art</span></a>
+    <a class="chip chip--activo" href="cotizacion.html">Mi cotización (<span id="conteo">0</span>)</a>
+  </header>
+
+  <main class="contenedor catalogo">
+    <section class="intro">
+      <h1>Personaliza y cotiza en minutos</h1>
+      <p>Elige un producto, cuéntanos tu idea y recibe tu cotización por WhatsApp.</p>
+    </section>
+
+    <div class="buscador">
+      <label for="buscar">Buscar producto</label>
+      <input id="buscar" type="search" placeholder="Ej. termo, stickers" autocomplete="off">
+    </div>
+
+    <nav aria-label="Categorías de productos">
+      <ul class="categorias" id="categorias"></ul>
+    </nav>
+
+    <p class="solo-lectores" id="resultado" role="status" aria-live="polite"></p>
+
+    <ul class="productos" id="productos"></ul>
+
+    <div class="vacio" id="vacio" hidden>
+      <p id="vacio-texto"></p>
+      <button class="chip" id="limpiar" type="button">Ver todos los productos</button>
+    </div>
+  </main>
+
+  <div class="barra-cotizacion" id="barra" hidden>
+    <div class="contenedor">
+      <a class="btn" href="cotizacion.html">Ver mi cotización (<span id="barra-conteo">0 productos</span>)</a>
+    </div>
+  </div>
+
+  <script src="js/data/productos.js"></script>
+  <script src="js/carrito.js"></script>
+  <script src="js/catalogo.js"></script>
+</body>
+</html>

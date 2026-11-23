@@ -1,0 +1,33 @@
+/* Tokens de diseño de LooArt (mismos valores que las variables de Figma "LooArt tokens") */
+:root {
+  /* Color */
+  --color-bg: #FBF7F2;
+  --color-surface: #FFFFFF;
+  --color-ink: #1E1B2B;
+  --color-muted: #5E5A6B;
+  --color-accent: #B8381A;
+  --color-tint: #F3E3DA;
+  --color-line: #E3DCD3;
+  --color-border: #D6CDC2;
+  --color-placeholder: #EFE3D8;
+
+  /* Tipografía */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  /* Espaciado (base 4px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Formas */
+  --radius-field: 12px;
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  /* Tamaño mínimo táctil */
+  --touch: 48px;
+}

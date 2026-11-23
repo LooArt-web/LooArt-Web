@@ -1,0 +1,96 @@
+/* Vista 2: Producto y personalización */
+
+.producto { padding-bottom: var(--space-6); }
+#vista { display: grid; gap: var(--space-3); }
+
+.navegacion { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+.progreso { display: flex; gap: 4px; }
+.progreso span { flex: 1; height: 5px; border-radius: 3px; background: var(--color-line); }
+.progreso .completo { background: var(--color-accent); }
+
+.disposicion { display: grid; gap: var(--space-5); margin-top: var(--space-2); }
+
+.ficha { display: grid; gap: var(--space-3); align-content: start; }
+.ficha__foto {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-card);
+  background: var(--color-placeholder);
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  overflow: hidden;
+}
+.ficha__foto img { width: 100%; height: 100%; object-fit: cover; }
+.ficha h1 { font-size: clamp(1.5rem, 5vw, 2.25rem); }
+
+.formulario { display: grid; gap: var(--space-5); }
+.formulario > .btn { width: 100%; }
+
+/* Opciones tipo chip (radios accesibles) */
+.opciones { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.opcion { position: relative; }
+.opcion input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.opcion span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font: 500 0.875rem var(--font-body);
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.opcion:hover span { border-color: var(--color-ink); }
+.opcion input:checked + span {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-surface);
+}
+.opcion input:focus-visible + span {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Cantidad */
+.cantidad { display: flex; align-items: center; gap: var(--space-3); }
+.cantidad .chip { justify-content: center; min-width: 48px; min-height: 48px; padding: 0; font-size: 1.25rem; }
+.cantidad .chip:disabled { opacity: 0.4; cursor: not-allowed; }
+.campo .cantidad input[type="number"] {
+  width: 88px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.125rem;
+  -moz-appearance: textfield;
+}
+.cantidad input::-webkit-outer-spin-button,
+.cantidad input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Imagen de referencia */
+.imagen { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.imagen label { cursor: pointer; }
+#imagen:focus-visible ~ .imagen label {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Confirmación y producto no encontrado */
+.aviso { display: grid; justify-items: start; gap: var(--space-3); max-width: 32rem; padding-block: var(--space-5); }
+.aviso h1 { font-size: clamp(1.5rem, 5vw, 2rem); }
+.aviso h1:focus { outline: none; }
+.aviso p { color: var(--color-muted); }
+.acciones { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+@media (min-width: 860px) {
+  .disposicion { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+  .ficha { position: sticky; top: var(--space-4); }
+  .formulario > .btn { width: fit-content; }
+}

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Personaliza tu producto | LooArt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/producto.css">
+</head>
+<body>
+
+  <header class="contenedor cabecera">
+    <a class="logo" href="index.html" aria-label="LooArt, ir al catálogo">Loo<span>Art</span></a>
+    <a class="chip chip--activo" href="cotizacion.html">Mi cotización (<span id="conteo">0</span>)</a>
+  </header>
+
+  <main class="contenedor producto">
+
+    <!-- Producto no encontrado -->
+    <section class="aviso" id="no-encontrado" hidden>
+      <h1>No encontramos ese producto</h1>
+      <p>Puede que el enlace esté incompleto. Vuelve al catálogo y elige uno.</p>
+      <a class="btn" href="index.html">Ir al catálogo</a>
+    </section>
+
+    <!-- Personalización -->
+    <div id="vista" hidden>
+      <div class="navegacion">
+        <a class="chip" href="index.html">← Volver al catálogo</a>
+        <span class="ayuda">Paso 1 de 3</span>
+      </div>
+      <div class="progreso" aria-hidden="true"><span class="completo"></span><span></span><span></span></div>
+
+      <div class="disposicion">
+        <div class="ficha">
+          <div class="ficha__foto" id="foto">Foto próximamente</div>
+          <div>
+            <h1 id="nombre"></h1>
+            <p class="ayuda" id="minimo"></p>
+          </div>
+        </div>
+
+        <form class="formulario" id="formulario" novalidate>
+
+          <fieldset class="campo" id="g-presentacion">
+            <legend>Presentación</legend>
+            <div class="opciones" id="op-presentacion"></div>
+            <p class="error" id="error-presentacion" hidden></p>
+          </fieldset>
+
+          <fieldset class="campo" id="g-color">
+            <legend>Color</legend>
+            <div class="opciones" id="op-color"></div>
+            <p class="error" id="error-color" hidden></p>
+          </fieldset>
+
+          <div class="campo" id="g-cantidad">
+            <label for="cantidad">Cantidad</label>
+            <p class="ayuda" id="ayuda-cantidad"></p>
+            <div class="cantidad">
+              <button class="chip" type="button" id="menos" aria-label="Quitar una pieza">−</button>
+              <input id="cantidad" type="number" inputmode="numeric" step="1" aria-describedby="ayuda-cantidad error-cantidad">
+              <button class="chip" type="button" id="mas" aria-label="Agregar una pieza">+</button>
+            </div>
+            <p class="error" id="error-cantidad" hidden></p>
+          </div>
+
+          <fieldset class="campo" id="g-tematica">
+            <legend>Temática</legend>
+            <div class="opciones" id="op-tematica"></div>
+            <p class="error" id="error-tematica" hidden></p>
+          </fieldset>
+
+          <div class="campo" id="g-tematica-libre" hidden>
+            <label for="tematica-libre">¿Qué temática quieres?</label>
+            <input id="tematica-libre" type="text" maxlength="80" placeholder="Ej. Gatos astronautas" aria-describedby="error-tematica-libre">
+            <p class="error" id="error-tematica-libre" hidden></p>
+          </div>
+
+          <div class="campo">
+            <label for="texto">Texto en el producto <span class="opcional">(opcional)</span></label>
+            <input id="texto" type="text" maxlength="60" placeholder="Nombre o frase">
+          </div>
+
+          <div class="campo">
+            <label for="descripcion">Descripción de tu idea <span class="opcional">(opcional)</span></label>
+            <textarea id="descripcion" rows="4" maxlength="400" placeholder="Cuéntanos si quieres algo muy específico"></textarea>
+          </div>
+
+          <div class="campo">
+            <span class="etiqueta">Imagen de referencia <span class="opcional">(opcional)</span></span>
+            <input class="solo-lectores" id="imagen" type="file" accept="image/*" aria-describedby="imagen-estado error-imagen">
+            <div class="imagen">
+              <label class="btn btn--secundario" for="imagen">Subir imagen</label>
+              <button class="chip" type="button" id="quitar-imagen" hidden>Quitar imagen</button>
+            </div>
+            <p class="ayuda" id="imagen-estado">Ningún archivo seleccionado. Máximo 800 KB.</p>
+            <p class="error" id="error-imagen" hidden></p>
+          </div>
+
+          <p class="error" id="error-guardar" role="alert" hidden></p>
+          <button class="btn" type="submit">Agregar a mi cotización</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Confirmación -->
+    <section class="aviso" id="confirmacion" hidden>
+      <h1 id="confirmacion-titulo" tabindex="-1"></h1>
+      <p>Puedes seguir agregando productos o revisar tu cotización.</p>
+      <div class="acciones">
+        <a class="btn" href="cotizacion.html">Ver mi cotización</a>
+        <a class="btn btn--secundario" href="index.html">Seguir cotizando</a>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/data/productos.js"></script>
+  <script src="js/carrito.js"></script>
+  <script src="js/producto.js"></script>
+</body>
+</html>

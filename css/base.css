@@ -1,0 +1,145 @@
+/* Estilos base compartidos por todas las vistas */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font: 400 1rem/1.5 var(--font-body);
+}
+
+h1, h2, h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+p { margin: 0; }
+ul { margin: 0; padding: 0; list-style: none; }
+a { color: inherit; }
+
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.contenedor {
+  width: 100%;
+  max-width: 1040px;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  padding: 0 var(--space-5);
+  border: 0;
+  border-radius: var(--radius-field);
+  background: var(--color-accent);
+  color: var(--color-surface);
+  font: 600 1rem var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.btn:hover { background: #9E2F15; }
+
+/* Chips (filtros y accesos) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: 500 0.875rem var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.chip:hover { border-color: var(--color-ink); }
+.chip[aria-pressed="true"],
+.chip--activo {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-surface);
+}
+
+[hidden] { display: none !important; }
+
+/* Encabezado compartido */
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+}
+.logo {
+  font: 700 1.375rem var(--font-display);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+.logo span { color: var(--color-accent); }
+
+/* Botón secundario */
+.btn--secundario {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1.5px solid var(--color-ink);
+}
+.btn--secundario:hover { background: var(--color-tint); }
+
+/* Formularios */
+fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+legend { padding: 0; }
+
+.campo { display: grid; gap: 6px; }
+.campo > label,
+.campo > legend,
+.etiqueta { font-weight: 600; font-size: 0.875rem; }
+.campo input[type="text"],
+.campo input[type="number"],
+.campo input[type="email"],
+.campo input[type="tel"],
+.campo textarea {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 12px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: 400 1rem var(--font-body);
+}
+.campo textarea { resize: vertical; }
+.campo input::placeholder,
+.campo textarea::placeholder { color: var(--color-muted); }
+[aria-invalid="true"] { border-color: var(--color-accent) !important; }
+
+.opcional { font-weight: 400; color: var(--color-muted); }
+.ayuda { color: var(--color-muted); font-size: 0.8125rem; }
+.error { color: #9E2F15; font-size: 0.875rem; font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
