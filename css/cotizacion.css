@@ -1,0 +1,122 @@
+/* Vista 3: Mi cotización y datos */
+
+.cotizacion { padding-bottom: var(--space-6); }
+#vista { display: grid; gap: var(--space-3); }
+#vista h1 { font-size: clamp(1.5rem, 5vw, 2.25rem); }
+
+.demo {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-field);
+  background: var(--color-tint);
+  font-size: 0.875rem;
+}
+
+.estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  font-size: 0.875rem;
+}
+.estado:focus { outline: none; }
+.estado button {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: 600 0.875rem var(--font-body);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.disposicion { display: grid; gap: var(--space-5); margin-top: var(--space-2); }
+.lateral { display: grid; gap: var(--space-5); align-content: start; }
+
+/* Lista de productos */
+.items { display: grid; gap: var(--space-3); }
+
+.item {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.item__cabecera { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
+.item__nombre { font-size: 1.0625rem; }
+.item__subtotal { font-weight: 600; white-space: nowrap; }
+
+.item__detalles {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--space-3);
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+.item__detalles dt { font-weight: 500; }
+.item__detalles dd { margin: 0; overflow-wrap: anywhere; }
+
+.item__precio { font-size: 0.875rem; }
+.etiqueta-mayoreo {
+  display: inline-block;
+  margin-left: var(--space-1);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-tint);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.item__sugerencia { color: var(--color-muted); font-size: 0.8125rem; }
+
+.item__pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.item__acciones { display: flex; gap: var(--space-2); }
+
+.cantidad { display: flex; align-items: center; gap: var(--space-2); }
+.cantidad .chip { justify-content: center; min-width: 44px; padding: 0; font-size: 1.25rem; }
+.cantidad .chip:disabled { opacity: 0.4; cursor: not-allowed; }
+.cantidad input {
+  width: 72px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: 600 1rem var(--font-body);
+  text-align: center;
+  -moz-appearance: textfield;
+}
+.cantidad input::-webkit-outer-spin-button,
+.cantidad input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Resumen */
+.resumen {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.resumen h2, .datos h2 { font-size: 1.125rem; }
+.resumen__lista { display: grid; gap: var(--space-2); margin: 0; }
+.resumen__lista div { display: flex; justify-content: space-between; gap: var(--space-3); }
+.resumen__lista dt, .resumen__lista dd { margin: 0; }
+.resumen__lista .tenue { color: var(--color-muted); font-size: 0.875rem; }
+.resumen__lista .total { padding-top: var(--space-2); border-top: 1px solid var(--color-line); font-size: 1.125rem; font-weight: 600; }
+
+/* Datos del cliente */
+.datos { display: grid; gap: var(--space-4); }
+.datos .btn { width: 100%; }
+
+@media (min-width: 900px) {
+  .disposicion { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+  .datos .btn { width: fit-content; }
+}
