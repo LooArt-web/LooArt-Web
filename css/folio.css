@@ -1,0 +1,107 @@
+/* Vista 4: Folio y WhatsApp */
+
+.folio { padding-bottom: var(--space-6); }
+#vista { display: grid; gap: var(--space-4); max-width: 40rem; }
+#vista h1 { font-size: clamp(1.5rem, 6vw, 2.25rem); }
+#vista h1:focus { outline: none; }
+#vista h2 { font-size: 1.125rem; margin-bottom: var(--space-3); }
+
+.demo {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-field);
+  background: var(--color-tint);
+  font-size: 0.875rem;
+}
+
+/* Tarjeta del folio */
+.folio-tarjeta {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--color-ink);
+  color: var(--color-surface);
+  text-align: center;
+}
+.folio-tarjeta__etiqueta { font-size: 0.8125rem; opacity: 0.8; }
+.folio-tarjeta__codigo {
+  font: 700 clamp(1.5rem, 8vw, 2.25rem) var(--font-display);
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
+/* Datos de la cotización */
+.datos-tarjeta {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.datos-tarjeta div { display: flex; justify-content: space-between; gap: var(--space-3); }
+.datos-tarjeta dt { color: var(--color-muted); font-size: 0.875rem; }
+.datos-tarjeta dd { margin: 0; font-weight: 600; }
+.datos-tarjeta .total { padding-top: var(--space-2); border-top: 1px solid var(--color-line); }
+.datos-tarjeta .total dt { color: var(--color-ink); font-size: 1rem; font-weight: 600; }
+.datos-tarjeta .total dd { font-size: 1.125rem; }
+
+/* Resumen de productos */
+.lineas { display: grid; gap: var(--space-3); }
+.linea {
+  display: grid;
+  gap: 4px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.linea__cabecera { display: flex; justify-content: space-between; gap: var(--space-3); font-weight: 600; }
+.linea__cabecera span:last-child { white-space: nowrap; }
+.linea__detalle { color: var(--color-muted); font-size: 0.8125rem; overflow-wrap: anywhere; }
+
+.instrucciones { display: grid; gap: var(--space-2); }
+
+.acciones--columna { display: grid; gap: var(--space-3); }
+.acciones--columna .btn { width: 100%; }
+
+@media (min-width: 720px) {
+  .acciones--columna { grid-template-columns: 1fr 1fr; }
+  .acciones--columna .ayuda { grid-column: 1 / -1; }
+}
+
+/* ---------- Documento para PDF (solo impresión) ---------- */
+.documento { display: none; }
+
+@media print {
+  @page { margin: 16mm; }
+
+  body { background: #fff; color: #000; font-size: 11pt; }
+  body > header,
+  #vista,
+  #no-encontrado { display: none !important; }
+
+  .folio { padding: 0; max-width: none; }
+  .documento { display: block; }
+
+  .doc__encabezado { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12mm; }
+  .doc__marca { font: 700 24pt var(--font-display); }
+  .doc__marca span { color: var(--color-accent); }
+  .doc__folio { text-align: right; }
+  .doc__folio strong { display: block; font: 700 16pt var(--font-display); letter-spacing: 0.04em; }
+
+  .doc h2 { font-size: 12pt; margin: 8mm 0 3mm; }
+  .doc p { margin: 0 0 1.5mm; }
+
+  .doc__tabla { width: 100%; border-collapse: collapse; }
+  .doc__tabla th, .doc__tabla td { padding: 2.5mm 2mm; border-bottom: 0.5pt solid #999; text-align: left; vertical-align: top; }
+  .doc__tabla th { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.04em; }
+  .doc__tabla .num { text-align: right; white-space: nowrap; }
+  .doc__tabla tr { break-inside: avoid; }
+  .doc__spec { font-size: 9pt; color: #333; }
+
+  .doc__total { margin-top: 5mm; text-align: right; font-size: 13pt; font-weight: 700; }
+  .doc__notas { margin-top: 8mm; font-size: 9pt; color: #333; }
+}

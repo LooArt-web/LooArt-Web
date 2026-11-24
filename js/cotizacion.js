@@ -256,6 +256,57 @@
     }
   }
 
+  /* ---------- Restricciones de escritura ----------
+   * Cada campo elimina en el momento los caracteres que no le corresponden,
+   * también al pegar texto. Se espera a que termine la composición de acentos
+   * para no romper letras como á o ñ al escribirlas.
+   */
+  function restringir(id, limpiar) {
+    var entrada = $(id);
+
+    function aplicar() {
+      var valor = entrada.value;
+      var limpio = limpiar(valor);
+      if (limpio !== valor) {
+        var pos = entrada.selectionStart;
+        entrada.value = limpio;
+        var nueva = Math.max(0, Math.min(limpio.length, pos - (valor.length - limpio.length)));
+        entrada.setSelectionRange(nueva, nueva);
+      }
+      if (!$("error-" + id).hidden) mostrarError(id, "");
+    }
+
+    entrada.addEventListener("input", function (e) { if (!e.isComposing) aplicar(); });
+    entrada.addEventListener("compositionend", aplicar);
+  }
+
+  /* Nombre: letras (con acentos y ñ), espacios, apóstrofo, punto y guion */
+  restringir("nombre", function (v) {
+    return v.replace(/[^\p{L}\p{M} '’.\-]/gu, "").replace(/ {2,}/g, " ").replace(/^ /, "");
+  });
+  $("nombre").addEventListener("blur", function () {
+    this.value = this.value.trim().replace(/ {2,}/g, " ");
+  });
+
+  /* Celular: solo dígitos, máximo 10 (quita el +52 si se pega con lada) */
+  restringir("celular", function (v) {
+    var d = v.replace(/\D/g, "");
+    if (d.length === 12 && d.indexOf("52") === 0) d = d.slice(2);
+    return d.slice(0, 10);
+  });
+
+  /* Correo: minúsculas, números y . _ % + - @ (una sola arroba), sin espacios */
+  restringir("correo", function (v) {
+    var l = v.toLowerCase().replace(/[^a-z0-9._%+\-@]/g, "");
+    var i = l.indexOf("@");
+    return i === -1 ? l : l.slice(0, i + 1) + l.slice(i + 1).replace(/@/g, "");
+  });
+
+  /* Código postal: solo dígitos, máximo 5 */
+  restringir("cp", function (v) {
+    return v.replace(/\D/g, "").slice(0, 5);
+  });
+
   function soloDigitosCelular(texto) {
     var d = texto.replace(/\D/g, "");
     if (d.length === 12 && d.indexOf("52") === 0) d = d.slice(2);
@@ -269,7 +320,7 @@
     var correo = $("correo").value.trim();
     var cp = $("cp").value.trim();
 
-    if (nombre.length < 3) fallos.push(["nombre", "Escribe tu nombre completo."]);
+    if (nombre.length < 3 || !/\p{L}.*\p{L}/u.test(nombre)) fallos.push(["nombre", "Escribe tu nombre completo."]);
     if (celular.length !== 10) fallos.push(["celular", "Escribe tu celular a 10 dígitos."]);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) fallos.push(["correo", "Escribe un correo válido, por ejemplo nombre@correo.com."]);
     if (!/^\d{5}$/.test(cp)) fallos.push(["cp", "El código postal tiene 5 dígitos."]);

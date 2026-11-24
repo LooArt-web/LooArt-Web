@@ -65,25 +65,25 @@
 
             <div class="campo">
               <label for="nombre">Nombre</label>
-              <input id="nombre" type="text" autocomplete="name" placeholder="Nombre completo" aria-describedby="error-nombre">
+              <input id="nombre" type="text" autocomplete="name" maxlength="60" placeholder="Nombre completo" aria-describedby="error-nombre">
               <p class="error" id="error-nombre" hidden></p>
             </div>
 
             <div class="campo">
               <label for="celular">Celular</label>
-              <input id="celular" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="10 dígitos" aria-describedby="error-celular">
+              <input id="celular" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="10 dígitos" aria-describedby="error-celular">
               <p class="error" id="error-celular" hidden></p>
             </div>
 
             <div class="campo">
               <label for="correo">Correo</label>
-              <input id="correo" type="email" inputmode="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" aria-describedby="error-correo">
+              <input id="correo" type="text" inputmode="email" autocomplete="email" maxlength="80" placeholder="tucorreo@ejemplo.com" aria-describedby="error-correo">
               <p class="error" id="error-correo" hidden></p>
             </div>
 
             <div class="campo">
               <label for="cp">Código postal</label>
-              <input id="cp" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="00000" aria-describedby="error-cp">
+              <input id="cp" type="text" inputmode="numeric" autocomplete="postal-code" placeholder="00000" aria-describedby="error-cp">
               <p class="error" id="error-cp" hidden></p>
             </div>
 

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tu folio | LooArt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/folio.css">
+</head>
+<body>
+
+  <header class="contenedor cabecera">
+    <a class="logo" href="index.html" aria-label="LooArt, ir al catálogo">Loo<span>Art</span></a>
+  </header>
+
+  <main class="contenedor folio">
+
+    <!-- Folio no encontrado -->
+    <section class="aviso" id="no-encontrado" hidden>
+      <h1>No encontramos esa cotización</h1>
+      <p>Las cotizaciones se guardan en el dispositivo donde las generaste. Si cambiaste de navegador o borraste los datos, tendrás que crear una nueva.</p>
+      <a class="btn" href="index.html">Ir al catálogo</a>
+    </section>
+
+    <div id="vista" hidden>
+      <div class="navegacion">
+        <a class="chip" href="index.html">← Volver al catálogo</a>
+        <span class="ayuda">Paso 3 de 3</span>
+      </div>
+      <div class="progreso" aria-hidden="true"><span class="completo"></span><span class="completo"></span><span class="completo"></span></div>
+
+      <h1 id="titulo" tabindex="-1">¡Tu cotización está lista!</h1>
+      <p class="demo" id="aviso-demo" hidden>Los precios son de ejemplo para esta demostración.</p>
+
+      <div class="folio-tarjeta">
+        <span class="folio-tarjeta__etiqueta">Tu folio</span>
+        <strong class="folio-tarjeta__codigo" id="folio"></strong>
+        <button class="chip" type="button" id="copiar">Copiar folio</button>
+      </div>
+      <p class="solo-lectores" id="estado-copia" role="status"></p>
+
+      <dl class="datos-tarjeta">
+        <div><dt>Emitida</dt><dd id="emision"></dd></div>
+        <div><dt>Vence</dt><dd id="vence"></dd></div>
+        <div><dt>Productos</dt><dd id="cuantos"></dd></div>
+        <div class="total"><dt>Total estimado (MXN)</dt><dd id="total"></dd></div>
+      </dl>
+
+      <section aria-labelledby="titulo-resumen">
+        <h2 id="titulo-resumen">Tu resumen</h2>
+        <ul class="lineas" id="lineas"></ul>
+      </section>
+
+      <div class="instrucciones">
+        <p>Al presionar el botón se abrirá WhatsApp con tu resumen listo. Revísalo y presiona <strong>Enviar</strong>. Si no aparece el folio, escríbelo en el mensaje.</p>
+        <p class="ayuda">El costo de envío es extra y se calcula por WhatsApp al generar tu orden.</p>
+      </div>
+
+      <div class="acciones acciones--columna">
+        <a class="btn" id="whatsapp" href="#" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+        <button class="btn btn--secundario" type="button" id="pdf">Descargar PDF</button>
+        <p class="ayuda">Se abrirá la ventana de impresión: elige “Guardar como PDF”. Si lo descargas, adjúntalo en el chat de WhatsApp.</p>
+      </div>
+    </div>
+
+    <!-- Documento para PDF: solo se ve al imprimir o guardar como PDF -->
+    <div class="documento" id="documento" aria-hidden="true"></div>
+
+  </main>
+
+  <script src="js/data/productos.js"></script>
+  <script src="js/precios.js"></script>
+  <script src="js/cotizaciones.js"></script>
+  <script src="js/folio.js"></script>
+</body>
+</html>
