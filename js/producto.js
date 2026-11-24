@@ -7,7 +7,7 @@
   var MAX_IMAGEN = 800 * 1024; /* 800 KB */
 
   var params = new URLSearchParams(window.location.search);
-  var producto = datos.productos.filter(function (p) { return p.id === params.get("id"); })[0];
+  var producto = datos.productos.filter(function (p) { return p.id === params.get("id") && p.visible !== false; })[0];
   var uidEditar = params.get("editar");
   var previo = uidEditar
     ? carrito.leer().filter(function (i) { return i.uid === uidEditar; })[0]

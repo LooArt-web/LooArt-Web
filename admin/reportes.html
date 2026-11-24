@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Reportes | Admin LooArt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <header id="cabecera"></header>
+
+  <main class="contenedor contenedor--ancho admin">
+    <div class="admin__titulo">
+      <h1>Reportes</h1>
+      <button class="btn btn--chico" type="button" id="exportar">Descargar CSV</button>
+    </div>
+
+    <form class="filtros" id="filtros">
+      <div class="campo">
+        <label for="desde">Desde</label>
+        <input id="desde" type="date">
+      </div>
+      <div class="campo">
+        <label for="hasta">Hasta</label>
+        <input id="hasta" type="date">
+      </div>
+      <div class="campo">
+        <label for="producto">Producto</label>
+        <select id="producto"><option value="">Todos</option></select>
+      </div>
+      <div class="campo">
+        <label for="estado">Estado</label>
+        <select id="estado"><option value="">Todos</option></select>
+      </div>
+      <div class="acciones">
+        <button class="chip" type="button" id="ultimos30">Últimos 30 días</button>
+        <button class="chip" type="button" id="todo">Todo el historial</button>
+      </div>
+    </form>
+
+    <p class="aviso-admin" id="aviso-demo" hidden>Los totales usan precios de ejemplo.</p>
+
+    <dl class="cifras" aria-live="polite">
+      <div class="cifra"><dt>Cotizaciones</dt><dd id="cifra-cotizaciones">0</dd></div>
+      <div class="cifra"><dt>Piezas cotizadas</dt><dd id="cifra-piezas">0</dd></div>
+      <div class="cifra"><dt>Total estimado (MXN)</dt><dd id="cifra-total">$0.00</dd></div>
+    </dl>
+
+    <div class="aviso" id="vacio" hidden>
+      <p>No hay cotizaciones con estos filtros. Cambia las fechas o el producto.</p>
+    </div>
+
+    <div id="tablas">
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <caption>Por producto</caption>
+          <thead><tr><th scope="col">Producto</th><th scope="col" class="num">Cotizaciones</th><th scope="col" class="num">Piezas</th><th scope="col" class="num">Total estimado</th></tr></thead>
+          <tbody id="por-producto"></tbody>
+        </table>
+      </div>
+
+      <div class="tabla-envoltura" style="margin-top: var(--space-4)">
+        <table class="tabla">
+          <caption>Por fecha</caption>
+          <thead><tr><th scope="col">Fecha</th><th scope="col" class="num">Cotizaciones</th><th scope="col" class="num">Total estimado</th></tr></thead>
+          <tbody id="por-fecha"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/data/productos.js"></script>
+  <script src="../js/almacen-catalogo.js"></script>
+  <script src="../js/precios.js"></script>
+  <script src="../js/cotizaciones.js"></script>
+  <script src="../js/admin/sesion.js"></script>
+  <script src="../js/admin/reportes.js"></script>
+</body>
+</html>

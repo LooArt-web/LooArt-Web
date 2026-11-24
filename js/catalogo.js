@@ -1,6 +1,6 @@
 /* Vista 1: Catálogo — búsqueda, filtro por categoría y contador de cotización */
 (function () {
-  var productos = window.LooArt.productos;
+  var productos = window.LooArt.productos.filter(function (p) { return p.visible !== false; });
   var carrito = window.LooArt.carrito;
 
   var estado = { categoria: "Todos", texto: "" };

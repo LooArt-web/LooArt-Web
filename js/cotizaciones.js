@@ -93,7 +93,50 @@ window.LooArt.cotizaciones = (function () {
     return { ok: false, sinImagenes: false };
   }
 
+  var ESTADOS = [
+    { id: "nueva", nombre: "Nueva" },
+    { id: "pendiente", nombre: "Pendiente de revisión" },
+    { id: "atendida", nombre: "Atendida" },
+    { id: "aceptada", nombre: "Aceptada" },
+    { id: "cancelada", nombre: "Cancelada" }
+  ];
+
+  function nombreEstado(id) {
+    var e = ESTADOS.filter(function (x) { return x.id === id; })[0];
+    return e ? e.nombre : id;
+  }
+
+  /* Cambia el estado y deja constancia en el historial de la cotización. */
+  function actualizarEstado(folio, estado) {
+    var lista = leer();
+    var c = lista.filter(function (x) { return x.folio === folio; })[0];
+    if (!c) return false;
+    c.estado = estado;
+    c.historial = (c.historial || []).concat([{ estado: estado, fecha: new Date().toISOString() }]);
+    return escribirJSON(CLAVE, lista);
+  }
+
+  function eliminar(folio) {
+    var lista = leer().filter(function (x) { return x.folio !== folio; });
+    return escribirJSON(CLAVE, lista);
+  }
+
+  /* Borra las cotizaciones emitidas hace más de `dias` días. Devuelve cuántas quitó. */
+  function depurar(dias) {
+    var limite = Date.now() - dias * 86400000;
+    var lista = leer();
+    var vigentes = lista.filter(function (x) { return new Date(x.emision).getTime() >= limite; });
+    if (vigentes.length !== lista.length) escribirJSON(CLAVE, vigentes);
+    return lista.length - vigentes.length;
+  }
+
   return {
+    ESTADOS: ESTADOS,
+    nombreEstado: nombreEstado,
+    actualizarEstado: actualizarEstado,
+    eliminar: eliminar,
+    depurar: depurar,
+    escribirLista: function (lista) { return escribirJSON(CLAVE, lista); },
     leer: leer,
     buscar: buscar,
     guardar: guardar,

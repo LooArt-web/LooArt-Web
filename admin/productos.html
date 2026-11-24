@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Productos | Admin LooArt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <header id="cabecera"></header>
+
+  <main class="contenedor contenedor--ancho admin">
+    <div class="admin__titulo">
+      <h1>Productos</h1>
+      <button class="btn btn--chico" type="button" id="agregar">Agregar producto</button>
+    </div>
+
+    <p class="aviso-admin">Los cambios se guardan en este navegador. Mientras el sitio no tenga servidor, solo se ven en el mismo navegador donde los hiciste. Para que un producto no aparezca por temporada, usa “Ocultar” en lugar de eliminarlo.</p>
+    <p class="error" id="error-general" role="alert" hidden></p>
+    <p class="ayuda" id="estado" role="status"></p>
+
+    <ul class="productos-admin" id="lista"></ul>
+
+    <section class="ventana__bloque" aria-labelledby="titulo-tematicas">
+      <h2 id="titulo-tematicas">Temáticas</h2>
+      <p class="ayuda">Están disponibles para todos los productos. Escribe una por línea. “Otra (libre)” se agrega sola.</p>
+      <div class="campo">
+        <label for="tematicas" class="solo-lectores">Lista de temáticas</label>
+        <textarea id="tematicas" rows="6" aria-describedby="error-tematicas"></textarea>
+        <p class="error" id="error-tematicas" hidden></p>
+      </div>
+      <div><button class="btn btn--chico" type="button" id="guardar-tematicas">Guardar temáticas</button></div>
+    </section>
+
+    <section class="ventana__bloque" aria-labelledby="titulo-restaurar">
+      <h2 id="titulo-restaurar">Restaurar catálogo de ejemplo</h2>
+      <p class="ayuda">Descarta todos los cambios de productos y temáticas y vuelve a los datos de ejemplo. No afecta a las cotizaciones.</p>
+      <div><button class="btn btn--peligro btn--chico" type="button" id="restaurar">Restaurar catálogo</button></div>
+    </section>
+  </main>
+
+  <dialog class="ventana" id="ventana-producto" aria-labelledby="titulo-ventana">
+    <form class="ventana__cuerpo formulario-admin" id="formulario" novalidate>
+      <h2 id="titulo-ventana">Producto</h2>
+
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" type="text" maxlength="60" aria-describedby="error-nombre">
+        <p class="error" id="error-nombre" hidden></p>
+      </div>
+
+      <div class="campo">
+        <label for="categoria">Categoría (tipo de producto)</label>
+        <input id="categoria" type="text" maxlength="40" list="categorias" aria-describedby="error-categoria">
+        <datalist id="categorias"></datalist>
+        <p class="error" id="error-categoria" hidden></p>
+      </div>
+
+      <div class="doble">
+        <div class="campo">
+          <label for="minimo">Mínimo de piezas</label>
+          <input id="minimo" type="number" inputmode="numeric" min="1" step="1" aria-describedby="error-minimo">
+          <p class="error" id="error-minimo" hidden></p>
+        </div>
+        <div class="campo">
+          <label for="precio">Precio unitario (MXN)</label>
+          <input id="precio" type="number" inputmode="decimal" min="0" step="0.01" aria-describedby="error-precio">
+          <p class="error" id="error-precio" hidden></p>
+        </div>
+      </div>
+
+      <div class="doble">
+        <div class="campo">
+          <label for="mayoreo-desde">Mayoreo desde (piezas) <span class="opcional">(opcional)</span></label>
+          <input id="mayoreo-desde" type="number" inputmode="numeric" min="1" step="1" aria-describedby="error-mayoreo">
+        </div>
+        <div class="campo">
+          <label for="mayoreo-precio">Precio de mayoreo (MXN)</label>
+          <input id="mayoreo-precio" type="number" inputmode="decimal" min="0" step="0.01" aria-describedby="error-mayoreo">
+        </div>
+      </div>
+      <p class="error" id="error-mayoreo" hidden></p>
+
+      <div class="campo">
+        <label for="presentaciones">Presentaciones <span class="opcional">(una por línea)</span></label>
+        <textarea id="presentaciones" rows="3"></textarea>
+      </div>
+
+      <div class="campo">
+        <label for="colores">Colores <span class="opcional">(uno por línea; déjalo vacío si no aplica)</span></label>
+        <textarea id="colores" rows="3"></textarea>
+      </div>
+
+      <div class="campo">
+        <span class="etiqueta">Foto <span class="opcional">(opcional)</span></span>
+        <input class="solo-lectores" id="foto" type="file" accept="image/*" aria-describedby="error-foto">
+        <img class="foto-vista" id="foto-vista" alt="Vista previa de la foto" hidden>
+        <div class="acciones">
+          <label class="btn btn--secundario btn--chico" for="foto">Elegir foto</label>
+          <button class="chip" type="button" id="quitar-foto" hidden>Quitar foto</button>
+        </div>
+        <p class="error" id="error-foto" hidden></p>
+      </div>
+
+      <label class="casilla"><input id="visible" type="checkbox"> Visible en el catálogo</label>
+
+      <p class="error" id="error-guardar" role="alert" hidden></p>
+      <div class="ventana__pie">
+        <button class="btn btn--secundario btn--chico" type="button" id="cancelar">Cancelar</button>
+        <button class="btn btn--chico" type="submit">Guardar producto</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="../js/data/productos.js"></script>
+  <script src="../js/almacen-catalogo.js"></script>
+  <script src="../js/precios.js"></script>
+  <script src="../js/admin/sesion.js"></script>
+  <script src="../js/admin/productos.js"></script>
+</body>
+</html>

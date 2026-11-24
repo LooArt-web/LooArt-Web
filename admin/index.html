@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Acceso administrador | LooArt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <main class="acceso">
+    <div class="acceso__tarjeta">
+      <a class="logo" href="../index.html">Loo<span>Art</span></a>
+      <h1 id="titulo">Acceso administrador</h1>
+      <p class="ayuda" id="ayuda"></p>
+
+      <form id="formulario" novalidate>
+        <div class="campo">
+          <label for="contrasena" id="etiqueta-contrasena">Contraseña</label>
+          <input id="contrasena" type="password" autocomplete="current-password" aria-describedby="error-contrasena">
+        </div>
+        <div class="campo" id="g-repetir" hidden>
+          <label for="repetir">Repite la contraseña</label>
+          <input id="repetir" type="password" autocomplete="new-password">
+        </div>
+        <p class="error" id="error-contrasena" role="alert" hidden></p>
+        <button class="btn" type="submit" id="enviar">Entrar</button>
+      </form>
+
+      <p class="aviso-admin">Demostración: sin servidor, este acceso solo protege el panel en este navegador. No es seguridad real.</p>
+    </div>
+  </main>
+
+  <script src="../js/admin/sesion.js"></script>
+  <script src="../js/admin/login.js"></script>
+</body>
+</html>

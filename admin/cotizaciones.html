@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Cotizaciones | Admin LooArt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <header id="cabecera"></header>
+
+  <main class="contenedor contenedor--ancho admin">
+    <div class="admin__titulo">
+      <h1>Cotizaciones</h1>
+      <div class="acciones">
+        <button class="btn btn--secundario btn--chico" type="button" id="cargar-ejemplos" hidden>Cargar cotizaciones de ejemplo</button>
+        <button class="btn btn--secundario btn--chico" type="button" id="borrar-ejemplos" hidden>Borrar ejemplos</button>
+      </div>
+    </div>
+
+    <p class="aviso-admin" id="aviso" role="status" hidden></p>
+
+    <div class="chips-estado" id="chips" role="group" aria-label="Filtrar por estado"></div>
+
+    <form class="filtros" id="filtros" role="search">
+      <div class="campo campo--ancho">
+        <label for="texto">Buscar por folio, nombre, celular o correo</label>
+        <input id="texto" type="search" autocomplete="off" placeholder="Ej. LA-261123 o Mariana">
+      </div>
+      <div class="campo">
+        <label for="producto">Producto</label>
+        <select id="producto"><option value="">Todos</option></select>
+      </div>
+      <div class="campo">
+        <label for="desde">Desde</label>
+        <input id="desde" type="date">
+      </div>
+      <div class="campo">
+        <label for="hasta">Hasta</label>
+        <input id="hasta" type="date">
+      </div>
+      <button class="btn btn--secundario btn--chico" type="button" id="limpiar">Limpiar filtros</button>
+    </form>
+
+    <p class="ayuda" id="cuenta" role="status"></p>
+
+    <div class="tabla-envoltura" id="tabla-envoltura">
+      <table class="tabla tabla--tarjetas">
+        <caption class="solo-lectores">Lista de cotizaciones</caption>
+        <thead>
+          <tr>
+            <th scope="col">Folio</th>
+            <th scope="col">Fecha</th>
+            <th scope="col">Cliente</th>
+            <th scope="col">Productos</th>
+            <th scope="col" class="num">Total</th>
+            <th scope="col">Estado</th>
+          </tr>
+        </thead>
+        <tbody id="filas"></tbody>
+      </table>
+    </div>
+
+    <div class="aviso" id="vacio" hidden>
+      <p id="vacio-texto"></p>
+    </div>
+  </main>
+
+  <dialog class="ventana" id="detalle" aria-labelledby="detalle-titulo"></dialog>
+
+  <script src="../js/data/productos.js"></script>
+  <script src="../js/almacen-catalogo.js"></script>
+  <script src="../js/precios.js"></script>
+  <script src="../js/cotizaciones.js"></script>
+  <script src="../js/admin/sesion.js"></script>
+  <script src="../js/admin/cotizaciones.js"></script>
+</body>
+</html>
