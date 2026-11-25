@@ -56,14 +56,12 @@
     productos.forEach(function (p, i) {
       var li = crear("li", "producto-fila" + (p.visible === false ? " producto-fila--oculto" : ""));
 
-      if (p.imagen) {
-        var img = crear("img", "producto-fila__foto");
-        img.src = p.imagen;
-        img.alt = "";
-        li.appendChild(img);
-      } else {
-        li.appendChild(crear("div", "producto-fila__foto", "Sin foto"));
-      }
+      var cajaFoto = crear("div", "producto-fila__foto");
+      datos.vistaPrevia.crear(p, cajaFoto, {
+        miniatura: true,
+        estado: { colorHex: p.colores[0] && p.colores[0].hex }
+      });
+      li.appendChild(cajaFoto);
 
       var info = crear("div", "producto-fila__info");
       var h = crear("h3", "", p.nombre);
@@ -134,8 +132,8 @@
   }
 
   function limpiarErrores() {
-    ["nombre", "categoria", "minimo", "precio", "mayoreo", "foto", "guardar"].forEach(function (c) { mostrarError(c, ""); });
-    ["nombre", "categoria", "minimo", "precio", "mayoreo-desde", "mayoreo-precio"].forEach(function (id) {
+    ["nombre", "categoria", "minimo", "precio", "mayoreo", "colores", "foto", "guardar"].forEach(function (c) { mostrarError(c, ""); });
+    ["nombre", "categoria", "minimo", "precio", "mayoreo-desde", "mayoreo-precio", "colores"].forEach(function (id) {
       $(id).removeAttribute("aria-invalid");
     });
   }
@@ -155,6 +153,20 @@
     return vistos;
   }
 
+  /* Colores: cada línea es "Nombre" o "Nombre #RRGGBB" */
+  var PATRON_COLOR = /^(.*?)\s*(#[0-9a-fA-F]{6})$/;
+
+  function colores(texto) {
+    return lineas(texto).map(function (l) {
+      var m = l.match(PATRON_COLOR);
+      return m && m[1] ? { nombre: m[1], hex: m[2].toUpperCase() } : { nombre: l, hex: null };
+    });
+  }
+
+  function coloresATexto(lista) {
+    return lista.map(function (c) { return c.nombre + (c.hex ? " " + c.hex : ""); }).join("\n");
+  }
+
   function abrirFormulario(indice) {
     editando = indice;
     limpiarErrores();
@@ -163,12 +175,13 @@
     $("titulo-ventana").textContent = p ? "Editar producto" : "Agregar producto";
     $("nombre").value = p ? p.nombre : "";
     $("categoria").value = p ? p.categoria : "";
+    $("modelo").value = p ? p.modelo : "caja";
     $("minimo").value = p ? p.minimo : 5;
     $("precio").value = p ? p.precio : "";
     $("mayoreo-desde").value = p && p.mayoreo ? p.mayoreo.desde : "";
     $("mayoreo-precio").value = p && p.mayoreo ? p.mayoreo.precio : "";
     $("presentaciones").value = p ? p.presentaciones.join("\n") : "";
-    $("colores").value = p ? p.colores.join("\n") : "";
+    $("colores").value = p ? coloresATexto(p.colores) : "";
     $("visible").checked = p ? p.visible !== false : true;
     foto = p && p.imagen ? p.imagen : null;
     $("foto").value = "";
@@ -256,6 +269,11 @@
     if (!Number.isInteger(minimo) || minimo < 1) falla("minimo", "El mínimo debe ser un número entero de 1 o más.");
     if (!(precio > 0)) falla("precio", "Escribe un precio mayor a 0.");
 
+    var colorMal = lineas($("colores").value).filter(function (l) {
+      return l.indexOf("#") !== -1 && !PATRON_COLOR.test(l);
+    })[0];
+    if (colorMal) falla("colores", "Revisa \u201c" + colorMal + "\u201d: el tono va como #RRGGBB, por ejemplo Rojo #C0392B.");
+
     if (desdeTxt || precioMTxt) {
       var desde = Number(desdeTxt);
       var precioM = Number(precioMTxt);
@@ -292,7 +310,8 @@
         ? { desde: Number($("mayoreo-desde").value), precio: Math.round(Number($("mayoreo-precio").value) * 100) / 100 }
         : null,
       presentaciones: lineas($("presentaciones").value),
-      colores: lineas($("colores").value),
+      colores: colores($("colores").value),
+      modelo: $("modelo").value,
       imagen: foto,
       visible: $("visible").checked
     });

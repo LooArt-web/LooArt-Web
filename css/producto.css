@@ -9,9 +9,11 @@
 .ficha__foto {
   display: grid;
   place-items: center;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 3;
+  max-height: 320px;
+  width: 100%;
   border-radius: var(--radius-card);
-  background: var(--color-placeholder);
+  background: radial-gradient(circle at 50% 40%, #F7EEE5 0%, var(--color-placeholder) 100%);
   color: var(--color-muted);
   font-size: 0.875rem;
   overflow: hidden;
@@ -79,5 +81,6 @@
 @media (min-width: 860px) {
   .disposicion { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
   .ficha { position: sticky; top: var(--space-4); }
+  .ficha__foto { aspect-ratio: 1 / 1; max-height: none; }
   .formulario > .btn { width: fit-content; }
 }

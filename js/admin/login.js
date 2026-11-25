@@ -1,11 +1,12 @@
 /* Acceso del administrador: crear contraseña la primera vez, después iniciar sesión */
 (function () {
   var admin = window.LooArt.admin;
+  var DESTINO = "dashboard.html";
 
   function $(id) { return document.getElementById(id); }
 
   if (admin.activa()) {
-    window.location.replace("cotizaciones.html");
+    window.location.replace(DESTINO);
     return;
   }
 
@@ -44,14 +45,14 @@
       if (contrasena.length < 8) { error("La contraseña debe tener al menos 8 caracteres."); $("contrasena").focus(); return; }
       if (contrasena !== $("repetir").value) { error("Las contraseñas no coinciden."); $("repetir").focus(); return; }
       admin.crearContrasena(contrasena).then(function () {
-        window.location.href = "cotizaciones.html";
+        window.location.href = DESTINO;
       });
       return;
     }
 
     if (!contrasena) { error("Escribe tu contraseña."); $("contrasena").focus(); return; }
     admin.entrar(contrasena).then(function (ok) {
-      if (ok) { window.location.href = "cotizaciones.html"; return; }
+      if (ok) { window.location.href = DESTINO; return; }
       error("La contraseña no es correcta.");
       $("contrasena").select();
     });

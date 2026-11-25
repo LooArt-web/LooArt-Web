@@ -28,11 +28,16 @@
     L.tematicas = guardado.tematicas;
   }
 
-  /* `visible: false` oculta un producto del catálogo (productos de temporada) */
+  /* `visible: false` oculta un producto del catálogo (productos de temporada).
+   * También se normalizan datos guardados con versiones anteriores:
+   * los colores eran texto y ahora son { nombre, hex }. */
   L.productos.forEach(function (p) {
     if (p.visible === undefined) p.visible = true;
     p.presentaciones = p.presentaciones || [];
-    p.colores = p.colores || [];
+    p.colores = (p.colores || []).map(function (c) {
+      return typeof c === "string" ? { nombre: c, hex: null } : c;
+    });
+    p.modelo = p.modelo || "caja";
   });
 
   L.catalogo = {

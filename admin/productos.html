@@ -65,6 +65,16 @@
         <p class="error" id="error-categoria" hidden></p>
       </div>
 
+      <div class="campo">
+        <label for="modelo">Tipo de producto <span class="opcional">(para la vista previa si aún no hay foto)</span></label>
+        <select id="modelo">
+          <option value="termo">Termo</option>
+          <option value="taza">Taza</option>
+          <option value="sticker">Sticker</option>
+          <option value="caja">Otro (caja)</option>
+        </select>
+      </div>
+
       <div class="doble">
         <div class="campo">
           <label for="minimo">Mínimo de piezas</label>
@@ -96,8 +106,9 @@
       </div>
 
       <div class="campo">
-        <label for="colores">Colores <span class="opcional">(uno por línea; déjalo vacío si no aplica)</span></label>
-        <textarea id="colores" rows="3"></textarea>
+        <label for="colores">Colores <span class="opcional">(uno por línea, con su tono así: Rojo #C0392B; vacío si no aplica)</span></label>
+        <textarea id="colores" rows="3" aria-describedby="error-colores"></textarea>
+        <p class="error" id="error-colores" hidden></p>
       </div>
 
       <div class="campo">
@@ -124,6 +135,7 @@
   <script src="../js/data/productos.js"></script>
   <script src="../js/almacen-catalogo.js"></script>
   <script src="../js/precios.js"></script>
+  <script src="../js/vista-previa.js"></script>
   <script src="../js/admin/sesion.js"></script>
   <script src="../js/admin/productos.js"></script>
 </body>

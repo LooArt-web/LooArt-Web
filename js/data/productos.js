@@ -5,15 +5,16 @@
  * y precios. Mientras tanto:
  *   - Solo Termo y Stickers son reales (mínimos confirmados en el cuestionario:
  *     termos 1 pza, stickers 10 pzas, resto 5 pzas).
- *   - Las opciones entre corchetes y las entradas con `pendiente: true` son
- *     marcadores de posición.
- *   - TODOS LOS PRECIOS SON DE EJEMPLO (ver `config.preciosDeEjemplo`).
+ *   - Las presentaciones, los colores, las entradas con `pendiente: true` y
+ *     TODOS LOS PRECIOS son de ejemplo (ver `config.preciosDeEjemplo`).
  *
- * Precios (MXN):
- *   precio  = precio unitario normal.
- *   mayoreo = { desde, precio }: a partir de `desde` piezas aplica `precio` por pieza.
- *
- * Para agregar una foto: guárdala en assets/img/ y pon su ruta en `imagen`.
+ * Campos de cada producto:
+ *   modelo  = maqueta de la vista previa si aún no hay foto: "termo", "taza",
+ *             "sticker" o "caja".
+ *   colores = [{ nombre, hex }]. El `hex` tiñe la vista previa.
+ *   precio  = precio unitario normal (MXN).
+ *   mayoreo = { desde, precio }: a partir de `desde` piezas aplica `precio`.
+ *   imagen  = ruta o data URL de la foto real (si existe, reemplaza la maqueta).
  */
 window.LooArt = window.LooArt || {};
 
@@ -25,28 +26,40 @@ window.LooArt.config = {
 
 window.LooArt.productos = [
   {
-    id: "termo", nombre: "Termo", categoria: "Termos", minimo: 1, imagen: null,
+    id: "termo", nombre: "Termo", categoria: "Termos", minimo: 1, imagen: null, modelo: "termo",
     precio: 180, mayoreo: { desde: 12, precio: 160 },
     presentaciones: ["[Presentación A]", "[Presentación B]"],
-    colores: ["[Color 1]", "[Color 2]", "[Color 3]"]
+    colores: [
+      { nombre: "Negro", hex: "#2A2733" },
+      { nombre: "Blanco", hex: "#F4F1EC" },
+      { nombre: "Rojo", hex: "#C0392B" },
+      { nombre: "Azul", hex: "#2F5DA8" }
+    ]
   },
   {
-    id: "stickers", nombre: "Stickers", categoria: "Stickers", minimo: 10, imagen: null,
+    id: "stickers", nombre: "Stickers", categoria: "Stickers", minimo: 10, imagen: null, modelo: "sticker",
     precio: 6, mayoreo: { desde: 50, precio: 4.5 },
     presentaciones: ["[Presentación A]", "[Presentación B]"],
     colores: []
   },
   {
-    id: "producto-3", nombre: "Producto 3", categoria: "Categoría 3", minimo: 5, imagen: null, pendiente: true,
+    id: "producto-3", nombre: "Producto 3", categoria: "Categoría 3", minimo: 5, imagen: null, modelo: "taza", pendiente: true,
     precio: 120, mayoreo: { desde: 10, precio: 100 },
     presentaciones: ["[Presentación A]", "[Presentación B]"],
-    colores: ["[Color 1]", "[Color 2]"]
+    colores: [
+      { nombre: "Blanco", hex: "#F4F1EC" },
+      { nombre: "Negro", hex: "#2A2733" },
+      { nombre: "Verde", hex: "#2E7D5B" }
+    ]
   },
   {
-    id: "producto-4", nombre: "Producto 4", categoria: "Categoría 3", minimo: 5, imagen: null, pendiente: true,
+    id: "producto-4", nombre: "Producto 4", categoria: "Categoría 3", minimo: 5, imagen: null, modelo: "caja", pendiente: true,
     precio: 90, mayoreo: { desde: 10, precio: 75 },
     presentaciones: ["[Presentación A]", "[Presentación B]"],
-    colores: ["[Color 1]", "[Color 2]"]
+    colores: [
+      { nombre: "Blanco", hex: "#F4F1EC" },
+      { nombre: "Amarillo", hex: "#E3B23C" }
+    ]
   }
 ];
 

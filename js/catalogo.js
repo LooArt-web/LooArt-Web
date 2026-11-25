@@ -69,15 +69,11 @@
     enlace.href = "producto.html?id=" + encodeURIComponent(p.id);
 
     var foto = crear("div", "tarjeta__foto");
-    if (p.imagen) {
-      var img = document.createElement("img");
-      img.src = p.imagen;
-      img.alt = p.nombre;
-      img.loading = "lazy";
-      foto.appendChild(img);
-    } else {
-      foto.textContent = "Foto próximamente";
-    }
+    var primerColor = p.colores[0];
+    window.LooArt.vistaPrevia.crear(p, foto, {
+      miniatura: true,
+      estado: { colorHex: primerColor && primerColor.hex, colorNombre: primerColor && primerColor.nombre }
+    });
 
     enlace.appendChild(foto);
     enlace.appendChild(crear("h2", "tarjeta__nombre", p.nombre));

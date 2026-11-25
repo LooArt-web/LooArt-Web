@@ -359,7 +359,7 @@
         var cantidad = p.minimo * (1 + ((i * 3 + k) % 5)) + (k ? 0 : p.mayoreo ? p.mayoreo.desde : 0);
         return {
           uid: "ej" + i + k, id: p.id, nombre: p.nombre,
-          presentacion: p.presentaciones[0] || "", color: p.colores[0] || "",
+          presentacion: p.presentaciones[0] || "", color: (p.colores[0] && p.colores[0].nombre) || "",
           cantidad: cantidad, tematica: datos.tematicas[0] || LIBRE, tematicaLibre: "",
           texto: "", descripcion: "", imagen: null,
           precioUnitario: precios.unitario(p, cantidad),
@@ -386,6 +386,14 @@
     pintar();
   });
 
+  /* Enlaces desde el resumen: ?estado=nueva filtra, ?folio=... abre el detalle */
+  var params = new URLSearchParams(window.location.search);
+  var estadoParam = params.get("estado");
+  if (cot.ESTADOS.some(function (e) { return e.id === estadoParam; })) filtros.estado = estadoParam;
+
   llenarProductos();
   pintar();
+
+  var folioParam = params.get("folio");
+  if (folioParam && cot.buscar(folioParam)) abrirDetalle(folioParam);
 })();

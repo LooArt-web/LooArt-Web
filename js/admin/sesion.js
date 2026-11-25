@@ -1,5 +1,5 @@
 /*
- * Sesión del administrador y encabezado compartido del panel.
+ * Sesión del administrador y menú compartido del panel.
  *
  * IMPORTANTE: sin servidor, esta contraseña solo protege el panel de quien use
  * este mismo navegador. NO es seguridad real: cualquiera con acceso al
@@ -78,13 +78,36 @@ window.LooArt.admin = (function () {
     window.location.href = "index.html";
   }
 
+  /* Iconos del menú (dibujos propios, sin librerías) */
+  var ICONOS = {
+    dashboard: '<path d="M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z"/>',
+    cotizaciones: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+    reportes: '<path d="M4 20V4M4 20h16M8 16v-5M13 16V8M18 16v-3"/>',
+    productos: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/>'
+  };
+
+  function icono(nombre) {
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.8");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML = ICONOS[nombre]; /* cadenas fijas de este archivo */
+    return svg;
+  }
+
+  /* Barra superior en celular, menú lateral en escritorio */
   function pintarCabecera(activo) {
     var cab = document.getElementById("cabecera");
-    cab.className = "contenedor contenedor--ancho admin-cabecera";
+    cab.className = "admin-lateral";
+    document.body.classList.add("admin-app");
 
     var logo = document.createElement("a");
     logo.className = "logo";
-    logo.href = "cotizaciones.html";
+    logo.href = "dashboard.html";
     logo.innerHTML = "Loo<span>Art</span> <small>Admin</small>";
     cab.appendChild(logo);
 
@@ -92,12 +115,18 @@ window.LooArt.admin = (function () {
     nav.setAttribute("aria-label", "Secciones del panel");
     var ul = document.createElement("ul");
     ul.className = "admin-nav";
-    [["cotizaciones", "Cotizaciones"], ["reportes", "Reportes"], ["productos", "Productos"]].forEach(function (s) {
+    [
+      ["dashboard", "Resumen"],
+      ["cotizaciones", "Cotizaciones"],
+      ["reportes", "Reportes"],
+      ["productos", "Productos"]
+    ].forEach(function (s) {
       var li = document.createElement("li");
       var a = document.createElement("a");
       a.className = "chip" + (s[0] === activo ? " chip--activo" : "");
       a.href = s[0] + ".html";
-      a.textContent = s[1];
+      a.appendChild(icono(s[0]));
+      a.appendChild(document.createTextNode(s[1]));
       if (s[0] === activo) a.setAttribute("aria-current", "page");
       li.appendChild(a);
       ul.appendChild(li);

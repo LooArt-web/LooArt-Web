@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Resumen | Admin LooArt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <header id="cabecera"></header>
+
+  <main class="contenedor contenedor--ancho admin">
+    <div class="admin__titulo">
+      <div>
+        <h1>Resumen</h1>
+        <p class="admin__subtitulo" id="subtitulo">Últimos 30 días</p>
+      </div>
+      <a class="btn btn--chico" href="cotizaciones.html">Ver todas las cotizaciones</a>
+    </div>
+
+    <div class="aviso-admin" id="sin-datos" hidden>
+      Aún no hay cotizaciones, por eso el resumen está vacío. Cuando un cliente genere su folio aparecerá aquí.
+      Para ver cómo luce con datos, puedes <a href="cotizaciones.html"><strong>cargar cotizaciones de ejemplo</strong></a>.
+    </div>
+
+    <a class="alerta-nuevas" id="alerta" href="cotizaciones.html?estado=nueva" hidden>
+      <span id="alerta-texto"></span>
+      <span>Revisarlas</span>
+    </a>
+
+    <dl class="kpis">
+      <div class="kpi">
+        <dt>Cotizaciones</dt>
+        <dd class="kpi__valor" id="kpi-cotizaciones">0</dd>
+        <dd class="kpi__nota" id="kpi-cotizaciones-nota"></dd>
+      </div>
+      <div class="kpi">
+        <dt>Total estimado (MXN)</dt>
+        <dd class="kpi__valor" id="kpi-total">$0.00</dd>
+        <dd class="kpi__nota" id="kpi-total-nota"></dd>
+      </div>
+      <div class="kpi">
+        <dt>Por atender</dt>
+        <dd class="kpi__valor" id="kpi-atender">0</dd>
+        <dd class="kpi__nota">Nuevas y pendientes de revisión</dd>
+      </div>
+      <div class="kpi">
+        <dt>Aceptación</dt>
+        <dd class="kpi__valor" id="kpi-aceptacion">0%</dd>
+        <dd class="kpi__nota" id="kpi-aceptacion-nota"></dd>
+      </div>
+    </dl>
+
+    <div class="tablero">
+      <section class="tarjeta-panel tarjeta-panel--ancha" aria-labelledby="t-dias">
+        <h2 id="t-dias">Cotizaciones por día</h2>
+        <p class="tarjeta-panel__nota">Últimos 14 días</p>
+        <div class="grafica" id="grafica-dias"></div>
+      </section>
+
+      <section class="tarjeta-panel" aria-labelledby="t-estados">
+        <h2 id="t-estados">Cotizaciones por estado</h2>
+        <p class="tarjeta-panel__nota">Todo el historial</p>
+        <div class="barras-h" id="estados"></div>
+      </section>
+
+      <section class="tarjeta-panel" aria-labelledby="t-top">
+        <h2 id="t-top">Productos más cotizados</h2>
+        <p class="tarjeta-panel__nota">Piezas en los últimos 30 días, sin contar canceladas</p>
+        <div class="barras-h" id="top"></div>
+      </section>
+
+      <section class="tarjeta-panel tarjeta-panel--ancha lista-reciente" aria-labelledby="t-recientes">
+        <h2 id="t-recientes">Cotizaciones recientes</h2>
+        <div class="tabla-envoltura">
+          <table class="tabla tabla--tarjetas">
+            <thead>
+              <tr>
+                <th scope="col">Folio</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Cliente</th>
+                <th scope="col" class="num">Total</th>
+                <th scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="recientes"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="../js/data/productos.js"></script>
+  <script src="../js/almacen-catalogo.js"></script>
+  <script src="../js/precios.js"></script>
+  <script src="../js/cotizaciones.js"></script>
+  <script src="../js/admin/sesion.js"></script>
+  <script src="../js/admin/dashboard.js"></script>
+</body>
+</html>

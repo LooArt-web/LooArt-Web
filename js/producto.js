@@ -34,16 +34,11 @@
   $("minimo").textContent = "Mínimo " + piezas(producto.minimo);
   $("ayuda-cantidad").textContent = "Mínimo " + piezas(producto.minimo);
 
-  if (producto.imagen) {
-    var img = document.createElement("img");
-    img.src = producto.imagen;
-    img.alt = producto.nombre;
-    $("foto").textContent = "";
-    $("foto").appendChild(img);
-  }
+  /* Vista previa: foto real o maqueta que cambia con lo que elige el cliente */
+  var vista = datos.vistaPrevia.crear(producto, $("foto"));
 
   /* ---------- Opciones tipo chip ---------- */
-  function pintarOpciones(contenedorId, nombre, valores, seleccionado) {
+  function pintarOpciones(contenedorId, nombre, valores, seleccionado, hexDe) {
     var cont = $(contenedorId);
     cont.textContent = "";
     valores.forEach(function (valor) {
@@ -55,11 +50,23 @@
       radio.value = valor;
       radio.checked = valor === seleccionado;
       var texto = document.createElement("span");
-      texto.textContent = valor;
+      var hex = hexDe ? hexDe(valor) : null;
+      if (hex) {
+        var muestra = document.createElement("i");
+        muestra.className = "muestra";
+        muestra.style.background = hex;
+        texto.appendChild(muestra);
+      }
+      texto.appendChild(document.createTextNode(valor));
       etiqueta.appendChild(radio);
       etiqueta.appendChild(texto);
       cont.appendChild(etiqueta);
     });
+  }
+
+  function hexColor(nombre) {
+    var c = producto.colores.filter(function (x) { return x.nombre === nombre; })[0];
+    return c && c.hex ? c.hex : null;
   }
 
   function valorElegido(nombre) {
@@ -70,7 +77,7 @@
   var tematicaPrevia = previo ? previo.tematica : "";
 
   pintarOpciones("op-presentacion", "presentacion", producto.presentaciones, previo && previo.presentacion);
-  pintarOpciones("op-color", "color", producto.colores, previo && previo.color);
+  pintarOpciones("op-color", "color", producto.colores.map(function (c) { return c.nombre; }), previo && previo.color, hexColor);
   pintarOpciones("op-tematica", "tematica", datos.tematicas.concat([LIBRE]), tematicaPrevia);
 
   $("g-presentacion").hidden = producto.presentaciones.length === 0;
@@ -115,12 +122,28 @@
   actualizarTematicaLibre();
   actualizarBotones();
 
+  /* ---------- Vista previa en vivo ---------- */
+  function actualizarVista() {
+    var color = valorElegido("color");
+    var tematica = valorElegido("tematica");
+    vista.actualizar({
+      colorHex: hexColor(color),
+      colorNombre: color,
+      arte: imagen && imagen.data ? imagen.data : null,
+      tematica: tematica === LIBRE ? $("tematica-libre").value.trim() : tematica,
+      texto: $("texto").value.trim()
+    });
+  }
+  $("formulario").addEventListener("input", actualizarVista);
+  $("formulario").addEventListener("change", actualizarVista);
+
   /* ---------- Imagen de referencia ---------- */
   function pintarImagen() {
     $("imagen-estado").textContent = imagen
       ? "Imagen seleccionada: " + imagen.nombre
       : "Ningún archivo seleccionado. Máximo 800 KB.";
     $("quitar-imagen").hidden = !imagen;
+    actualizarVista();
   }
 
   $("imagen").addEventListener("change", function () {
