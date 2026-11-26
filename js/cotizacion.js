@@ -66,6 +66,23 @@
     var producto = productoDe(item.id);
     var li = crear("li", "item");
 
+    /* Miniatura con el color, la imagen y cómo se colocó */
+    if (datos.vistaPrevia) {
+      var miniatura = crear("div", "item__vista");
+      var colorElegido = (producto.colores || []).filter(function (c) { return c.nombre === item.color; })[0];
+      datos.vistaPrevia.crear(producto, miniatura, {
+        miniatura: true,
+        estado: {
+          colorHex: colorElegido && colorElegido.hex,
+          arte: item.imagen && item.imagen.data,
+          tematica: item.tematica === LIBRE ? "" : item.tematica,
+          diseno: item.diseno
+        }
+      });
+      li.appendChild(miniatura);
+      li.classList.add("item--con-vista");
+    }
+
     var cabecera = crear("div", "item__cabecera");
     cabecera.appendChild(crear("h3", "item__nombre", producto.nombre));
     var subtotal = crear("span", "item__subtotal");
@@ -84,6 +101,7 @@
     fila("Texto", item.texto);
     fila("Idea", item.descripcion);
     fila("Imagen", item.imagen && item.imagen.nombre);
+    if (item.imagen && datos.vistaPrevia) fila("Colocación", datos.vistaPrevia.describirDiseno(item.diseno));
     li.appendChild(detalles);
 
     var precio = crear("p", "item__precio");

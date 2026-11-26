@@ -300,3 +300,78 @@ dialog.ventana::backdrop { background: rgba(30, 27, 43, 0.55); }
 @media (max-width: 479px) {
   .diagnostico__fila { grid-template-columns: 1fr; gap: var(--space-1); }
 }
+
+/* Vista previa del diseño en el detalle de una cotización */
+.detalle-item__vista {
+  width: 180px;
+  aspect-ratio: 1;
+  margin-top: var(--space-2);
+  border-radius: 12px;
+  background: var(--color-placeholder);
+  overflow: hidden;
+}
+
+/* Patrón de cada temática */
+.patrones-tematica { display: grid; gap: var(--space-2); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-line); }
+.patrones-tematica h3 { font-size: 1rem; }
+.patrones { display: grid; gap: var(--space-2); }
+.patron-fila {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-line);
+}
+.patron-fila:first-child { border-top: 0; }
+.patron-fila__muestra {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-bg);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+  color: var(--color-muted);
+  font-size: 0.625rem;
+  text-align: center;
+}
+.patron-fila__muestra svg { display: block; width: 100%; height: 100%; }
+.patron-fila__info { display: grid; gap: 4px; min-width: 0; }
+.patron-fila__info label { font-weight: 600; font-size: 0.9375rem; overflow-wrap: anywhere; }
+.patron-fila__info select {
+  min-height: 40px;
+  padding: 0 8px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: 500 0.875rem var(--font-body);
+}
+.patron-fila__acciones { grid-column: 2; display: flex; gap: var(--space-2); }
+.patron-fila__acciones input:focus-visible + label { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+@media (min-width: 640px) {
+  .patron-fila { grid-template-columns: 56px minmax(0, 1fr) auto; }
+  .patron-fila__info { grid-template-columns: minmax(0, 1fr) 12rem; align-items: center; }
+  .patron-fila__acciones { grid-column: auto; }
+}
+
+/* Foto recortada: frente y reverso */
+.piezas-foto { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.piezas-foto figure { display: grid; gap: 4px; margin: 0; }
+.piezas-foto figcaption { font-size: 0.8125rem; font-weight: 600; }
+.piezas-foto__img {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: var(--space-2);
+  border-radius: 12px;
+  /* cuadritos claros para notar que el fondo quedó transparente */
+  background: repeating-conic-gradient(#F3EEE8 0 25%, #FFFFFF 0 50%) 0 0 / 16px 16px;
+  box-shadow: inset 0 0 0 1px var(--color-line);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  text-align: center;
+}
+.piezas-foto__img img { max-width: 100%; max-height: 100%; object-fit: contain; }

@@ -45,7 +45,7 @@
           <div>
             <h1 id="nombre"></h1>
             <p class="ayuda" id="minimo"></p>
-            <p class="ayuda" id="vista-nota">Vista previa aproximada: cambia al elegir color, temática o subir tu imagen. El resultado final lo confirmamos contigo por WhatsApp.</p>
+            <p class="ayuda" id="vista-nota">Vista previa ilustrativa: cambia al elegir color, temática o subir tu imagen. El diseño final lo confirmamos contigo por WhatsApp.</p>
           </div>
         </div>
 
@@ -106,6 +106,33 @@
             <p class="ayuda" id="imagen-estado">Ningún archivo seleccionado. Máximo 800 KB.</p>
             <p class="error" id="error-imagen" hidden></p>
           </div>
+
+          <!-- Solo aparece cuando hay imagen: cómo se coloca en el producto -->
+          <fieldset class="campo colocacion" id="g-colocacion" hidden>
+            <legend>Cómo se coloca tu imagen</legend>
+            <!-- En celular la vista previa principal queda arriba: esta copia muestra el cambio junto a los controles -->
+            <div class="colocacion__vista" id="vista-colocacion" aria-hidden="true"></div>
+            <div class="opciones" id="op-colocacion">
+              <label class="opcion"><input type="radio" name="colocacion" value="centro" checked><span>Al centro</span></label>
+              <label class="opcion"><input type="radio" name="colocacion" value="repetida"><span>Repetida</span></label>
+              <label class="opcion"><input type="radio" name="colocacion" value="envolvente"><span>Envolvente</span></label>
+            </div>
+            <p class="ayuda" id="ayuda-colocacion"></p>
+
+            <div class="ajustes" id="ajustes-repetida" hidden>
+              <div class="ajuste">
+                <label for="tamano">Tamaño de las miniaturas</label>
+                <input id="tamano" type="range" min="0" max="100" step="1" value="45" aria-describedby="valor-tamano">
+                <span class="ajuste__valor" id="valor-tamano" aria-hidden="true"></span>
+              </div>
+              <div class="ajuste">
+                <label for="separacion">Separación</label>
+                <input id="separacion" type="range" min="0" max="60" step="1" value="20" aria-describedby="valor-separacion">
+                <span class="ajuste__valor" id="valor-separacion" aria-hidden="true"></span>
+              </div>
+              <label class="casilla"><input id="intercalado" type="checkbox" checked> Intercalar filas</label>
+            </div>
+          </fieldset>
 
           <p class="error" id="error-guardar" role="alert" hidden></p>
           <button class="btn" type="submit">Agregar a mi carrito</button>

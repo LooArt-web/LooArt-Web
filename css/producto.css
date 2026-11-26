@@ -84,3 +84,126 @@
   .ficha__foto { aspect-ratio: 1 / 1; max-height: none; }
   .formulario > .btn { width: fit-content; }
 }
+
+/* ---------- Cómo se coloca la imagen ---------- */
+.colocacion { gap: var(--space-2); }
+.ajustes {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+}
+.ajuste {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px var(--space-3);
+}
+.ajuste label { font-size: 0.875rem; font-weight: 500; }
+.ajuste__valor { grid-row: 1; grid-column: 2; color: var(--color-muted); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.ajuste input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+.casilla {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.casilla input { width: 20px; height: 20px; margin: 0; accent-color: var(--color-accent); }
+
+/* Vista previa que se puede girar */
+.ficha__foto { position: relative; }
+.ficha__foto svg[tabindex]:focus-visible { outline: 3px solid var(--color-accent); outline-offset: -3px; border-radius: var(--radius-card); }
+.vista-previa__pista {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(30, 27, 43, 0.78);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Vista previa junto a los controles de colocación, solo en celular */
+.colocacion__vista {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 1;
+  margin: var(--space-1) auto var(--space-2);
+  border-radius: var(--radius-card);
+  background: radial-gradient(circle at 50% 40%, #F7EEE5 0%, var(--color-placeholder) 100%);
+  overflow: hidden;
+}
+@media (min-width: 860px) {
+  .colocacion__vista { display: none; }
+}
+
+/* ---------- Temáticas como muestras ---------- */
+.opciones--tematicas { gap: var(--space-3); }
+.opciones--tematicas .opcion span {
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 6px;
+  width: 96px;
+  min-height: 0;
+  padding: 6px 6px 8px;
+  border-radius: 14px;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  text-align: center;
+}
+.tematica__muestra {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(30, 27, 43, 0.08);
+}
+.tematica__muestra svg { display: block; width: 100%; height: 100%; }
+.tematica__muestra--vacia {
+  border: 1.5px dashed var(--color-border);
+  box-shadow: none;
+  color: var(--color-muted);
+  font: 600 1.375rem var(--font-display);
+  font-style: normal;
+}
+.opciones--tematicas .opcion input:checked + span .tematica__muestra { box-shadow: 0 0 0 2px #fff; }
+.opciones--tematicas .opcion input:checked + span .tematica__muestra--vacia { border-color: rgba(255, 255, 255, 0.5); color: #fff; }
+
+/* Botón para voltear artículos planos (pin, sticker…) */
+.vista-previa__voltear {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-ink);
+  font: 600 0.8125rem var(--font-body);
+  cursor: pointer;
+}
+.vista-previa__voltear:hover { border-color: var(--color-ink); }

@@ -120,3 +120,20 @@
   .disposicion { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
   .datos .btn { width: fit-content; }
 }
+
+/* Miniatura del producto con su diseño */
+.item--con-vista { grid-template-columns: 72px minmax(0, 1fr); column-gap: var(--space-3); }
+.item--con-vista > :not(.item__vista) { grid-column: 2; }
+.item__vista {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  align-self: start;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: var(--color-placeholder);
+  overflow: hidden;
+}
+.item--con-vista > .item__pie { grid-column: 1 / -1; }
+@media (min-width: 600px) {
+  .item--con-vista { grid-template-columns: 104px minmax(0, 1fr); column-gap: var(--space-4); }
+}

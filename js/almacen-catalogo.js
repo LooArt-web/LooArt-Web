@@ -12,7 +12,8 @@
   var CLAVE = "looart.catalogo";
 
   /* Copia de los datos originales, para poder restaurarlos */
-  var base = JSON.parse(JSON.stringify({ productos: L.productos, tematicas: L.tematicas }));
+  L.patronesTematica = L.patronesTematica || {};
+  var base = JSON.parse(JSON.stringify({ productos: L.productos, tematicas: L.tematicas, patrones: L.patronesTematica }));
 
   function leer() {
     try {
@@ -26,6 +27,8 @@
   if (guardado) {
     L.productos = guardado.productos;
     L.tematicas = guardado.tematicas;
+    /* Catálogos guardados antes de existir los patrones conservan los de ejemplo */
+    if (guardado.patrones && typeof guardado.patrones === "object") L.patronesTematica = guardado.patrones;
   }
 
   /* `visible: false` oculta un producto del catálogo (productos de temporada).
@@ -43,9 +46,11 @@
   L.catalogo = {
     base: base,
     personalizado: !!guardado,
-    guardar: function (productos, tematicas) {
+    /* `patrones` es opcional: si no se pasa, se conservan los actuales */
+    guardar: function (productos, tematicas, patrones) {
+      if (patrones) L.patronesTematica = patrones;
       try {
-        localStorage.setItem(CLAVE, JSON.stringify({ productos: productos, tematicas: tematicas }));
+        localStorage.setItem(CLAVE, JSON.stringify({ productos: productos, tematicas: tematicas, patrones: L.patronesTematica }));
         return true;
       } catch (e) {
         return false;

@@ -13,8 +13,12 @@
   /* Copia de trabajo: nada cambia en el sitio hasta que se guarda */
   var productos = JSON.parse(JSON.stringify(datos.productos));
   var tematicas = datos.tematicas.slice();
+  var patrones = JSON.parse(JSON.stringify(datos.patronesTematica || {}));
+  var MAX_LADO_PATRON = 240;
   var editando = -1; /* posición del producto en edición, -1 = nuevo */
   var foto = null;   /* imagen en formato data URL */
+  /* Foto recortada: { frente: Pieza, reverso: Pieza | null } (ver js/recorte.js) */
+  var recorte = null;
 
   function $(id) { return document.getElementById(id); }
 
@@ -29,7 +33,7 @@
 
   /* ---------- Guardar ---------- */
   function persistir() {
-    var ok = datos.catalogo.guardar(productos, tematicas);
+    var ok = datos.catalogo.guardar(productos, tematicas, patrones);
     var e = $("error-general");
     e.textContent = ok ? "" : "No se pudo guardar. Es probable que el navegador se haya quedado sin espacio: prueba con fotos más ligeras o quita alguna.";
     e.hidden = ok;
@@ -139,10 +143,61 @@
   }
 
   function pintarFoto() {
-    var segura = datos.vistaPrevia.urlImagenSegura(foto);
+    var segura = recorte ? null : datos.vistaPrevia.urlImagenSegura(foto);
     $("foto-vista").hidden = !segura;
     if (segura) $("foto-vista").src = segura;
-    $("quitar-foto").hidden = !foto;
+    $("quitar-foto").hidden = !foto && !recorte;
+
+    $("piezas-foto").hidden = !recorte;
+    $("intercambiar-foto").hidden = !(recorte && recorte.reverso);
+    $("subir-reverso").hidden = !recorte;
+    $("subir-reverso").textContent = recorte && recorte.reverso ? "Cambiar reverso" : "Subir reverso aparte";
+    $("quitar-reverso").hidden = !(recorte && recorte.reverso);
+    ["frente", "reverso"].forEach(function (lado) {
+      var caja = $("pieza-" + lado);
+      caja.textContent = "";
+      var pieza = recorte && recorte[lado];
+      if (pieza) {
+        var img = document.createElement("img");
+        img.src = datos.vistaPrevia.urlImagenSegura(pieza.imagen);
+        img.alt = lado === "frente" ? "Frente recortado" : "Reverso recortado";
+        caja.appendChild(img);
+      } else {
+        caja.appendChild(crear("span", "", lado === "frente" ? "Sin foto" : "Sin reverso: el producto no se voltea"));
+      }
+    });
+  }
+
+  /* Pieza guardada en el producto → formato de js/recorte.js (para editar) */
+  function recorteDeProducto(p) {
+    if (!p || !p.imagenRecortada || !p.imagen) return null;
+    var t = p.imagenTam || {}, tr = p.imagenReversoTam || {};
+    return {
+      frente: { imagen: p.imagen, ancho: t.w, alto: t.h, zona: p.imagenZona || null, zonaCaja: p.imagenZonaCaja || null,
+        borde: p.imagenBorde, cara: p.imagenCara },
+      reverso: p.imagenReverso ? { imagen: p.imagenReverso, ancho: tr.w, alto: tr.h, zona: null, zonaCaja: null,
+        borde: p.imagenBorde, cara: p.imagenCara } : null
+    };
+  }
+
+  /* Campos del producto a partir de la foto (recortada o normal) */
+  function camposFoto() {
+    if (!recorte) {
+      return { imagen: foto, imagenRecortada: false, imagenReverso: null, imagenZona: null, imagenZonaCaja: null,
+        imagenBorde: null, imagenCara: null, imagenTam: null, imagenReversoTam: null };
+    }
+    var f = recorte.frente, r = recorte.reverso;
+    return {
+      imagen: f.imagen,
+      imagenRecortada: true,
+      imagenReverso: r ? r.imagen : null,
+      imagenZona: f.zona || null,
+      imagenZonaCaja: f.zonaCaja || null,
+      imagenBorde: f.borde || null,
+      imagenCara: f.cara || null,
+      imagenTam: { w: f.ancho, h: f.alto },
+      imagenReversoTam: r ? { w: r.ancho, h: r.alto } : null
+    };
   }
 
   function lineas(texto) {
@@ -185,7 +240,10 @@
     $("colores").value = p ? coloresATexto(p.colores) : "";
     $("visible").checked = p ? p.visible !== false : true;
     foto = p && p.imagen ? datos.vistaPrevia.urlImagenSegura(p.imagen) : null;
+    recorte = recorteDeProducto(p);
     $("foto").value = "";
+    $("foto-reverso").value = "";
+    $("estado-foto").textContent = "";
     pintarFoto();
 
     ventana.showModal();
@@ -225,17 +283,72 @@
       this.value = "";
       return;
     }
+    if ($("quitar-fondo").checked && datos.recorte) {
+      $("estado-foto").textContent = "Quitando el fondo…";
+      datos.recorte.procesar(archivo).then(function (r) {
+        recorte = { frente: r.frente, reverso: r.reverso };
+        foto = r.frente.imagen;
+        $("estado-foto").textContent = r.reverso
+          ? "Listo: encontramos frente y reverso. Revisa que el frente sea la cara donde va el diseño."
+          : "Listo: encontramos una sola pieza. Si tienes la foto del reverso, súbela aparte.";
+        pintarFoto();
+      }, function () {
+        $("estado-foto").textContent = "";
+        mostrarError("foto", "No encontramos el producto en la foto. Prueba con otra o desmarca “Quitar el fondo”.");
+      });
+      return;
+    }
     reducirImagen(archivo).then(function (data) {
       foto = data;
+      recorte = null;
+      $("estado-foto").textContent = "";
       pintarFoto();
     }, function () {
       mostrarError("foto", "No pudimos leer esa imagen. Prueba con otra.");
     });
   });
 
+  /* Reverso en una foto aparte: se recorta y se usa su pieza principal */
+  $("foto-reverso").addEventListener("change", function () {
+    var archivo = this.files[0];
+    mostrarError("foto", "");
+    if (!archivo || !recorte) return;
+    if (archivo.type.indexOf("image/") !== 0) {
+      mostrarError("foto", "El archivo debe ser una imagen (JPG, PNG, etc.).");
+      return;
+    }
+    $("estado-foto").textContent = "Quitando el fondo del reverso…";
+    datos.recorte.procesar(archivo).then(function (r) {
+      recorte.reverso = r.frente;
+      $("estado-foto").textContent = "Listo: agregamos el reverso.";
+      pintarFoto();
+    }, function () {
+      $("estado-foto").textContent = "";
+      mostrarError("foto", "No encontramos el producto en la foto del reverso. Prueba con otra.");
+    });
+    this.value = "";
+  });
+
+  $("intercambiar-foto").addEventListener("click", function () {
+    if (!recorte || !recorte.reverso) return;
+    var t = recorte.frente; recorte.frente = recorte.reverso; recorte.reverso = t;
+    foto = recorte.frente.imagen;
+    $("estado-foto").textContent = "Intercambiamos frente y reverso.";
+    pintarFoto();
+  });
+
+  $("quitar-reverso").addEventListener("click", function () {
+    if (!recorte) return;
+    recorte.reverso = null;
+    $("estado-foto").textContent = "Quitamos el reverso: el producto se mostrará sin voltear.";
+    pintarFoto();
+  });
+
   $("quitar-foto").addEventListener("click", function () {
     foto = null;
+    recorte = null;
     $("foto").value = "";
+    $("estado-foto").textContent = "";
     pintarFoto();
   });
 
@@ -313,9 +426,8 @@
       presentaciones: lineas($("presentaciones").value),
       colores: colores($("colores").value),
       modelo: $("modelo").value,
-      imagen: foto,
       visible: $("visible").checked
-    });
+    }, camposFoto());
     delete p.pendiente; /* ya no es un marcador de ejemplo */
 
     if (editando >= 0) productos[editando] = p; else productos.push(p);
@@ -344,7 +456,111 @@
     tematicas = lista;
     $("tematicas").value = tematicas.join("\n");
     if (persistir()) estado("Guardamos " + (tematicas.length === 1 ? "1 temática." : tematicas.length + " temáticas."));
+    pintarPatrones();
   });
+
+  /* ---------- Patrón de cada temática ---------- */
+  /* Reduce la imagen conservando la transparencia (PNG) */
+  function reducirPatron(archivo) {
+    return new Promise(function (resolver, rechazar) {
+      var lector = new FileReader();
+      lector.onerror = function () { rechazar(new Error("lectura")); };
+      lector.onload = function () {
+        var img = new Image();
+        img.onerror = function () { rechazar(new Error("imagen")); };
+        img.onload = function () {
+          var escala = Math.min(1, MAX_LADO_PATRON / Math.max(img.width, img.height));
+          var lienzo = document.createElement("canvas");
+          lienzo.width = Math.max(1, Math.round(img.width * escala));
+          lienzo.height = Math.max(1, Math.round(img.height * escala));
+          lienzo.getContext("2d").drawImage(img, 0, 0, lienzo.width, lienzo.height);
+          resolver(lienzo.toDataURL("image/png"));
+        };
+        img.src = lector.result;
+      };
+      lector.readAsDataURL(archivo);
+    });
+  }
+
+  function guardarPatron(tematica, valor, mensaje) {
+    var anterior = patrones[tematica];
+    if (valor) patrones[tematica] = valor; else delete patrones[tematica];
+    if (!persistir()) {
+      if (anterior) patrones[tematica] = anterior; else delete patrones[tematica];
+      return;
+    }
+    $("estado-patrones").textContent = mensaje;
+    pintarPatrones();
+  }
+
+  function pintarPatrones() {
+    var lista = $("patrones");
+    lista.textContent = "";
+    /* Solo se conservan los patrones de temáticas que siguen existiendo */
+    Object.keys(patrones).forEach(function (t) { if (tematicas.indexOf(t) === -1) delete patrones[t]; });
+    if (!tematicas.length) {
+      lista.appendChild(crear("li", "ayuda", "Agrega temáticas en la lista de arriba para asignarles un patrón."));
+      return;
+    }
+    tematicas.forEach(function (t, i) {
+      var actual = patrones[t] || null;
+      var li = crear("li", "patron-fila");
+
+      var muestra = crear("div", "patron-fila__muestra");
+      var svg = datos.vistaPrevia.muestraTematica(t, "#F4F1EC");
+      if (svg) muestra.appendChild(svg); else muestra.textContent = "Sin patrón";
+      li.appendChild(muestra);
+
+      var info = crear("div", "patron-fila__info");
+      var idSel = "patron-" + i;
+      var etiqueta = crear("label", "", t);
+      etiqueta.htmlFor = idSel;
+      info.appendChild(etiqueta);
+
+      var sel = document.createElement("select");
+      sel.id = idSel;
+      sel.appendChild(new Option("Sin patrón", ""));
+      datos.vistaPrevia.MOTIVOS.forEach(function (m) { sel.appendChild(new Option(m.nombre, m.id)); });
+      if (actual && actual.imagen) sel.appendChild(new Option("Imagen propia", "__imagen"));
+      sel.value = actual ? (actual.imagen ? "__imagen" : actual.motivo) : "";
+      sel.addEventListener("change", function () {
+        if (sel.value === "__imagen") return;
+        guardarPatron(t, sel.value ? { motivo: sel.value } : null,
+          sel.value ? "Guardamos el patrón de " + t + "." : "Quitamos el patrón de " + t + ".");
+      });
+      info.appendChild(sel);
+      li.appendChild(info);
+
+      var acciones = crear("div", "patron-fila__acciones");
+      var idArchivo = "patron-archivo-" + i;
+      var archivo = document.createElement("input");
+      archivo.type = "file";
+      archivo.accept = "image/*";
+      archivo.id = idArchivo;
+      archivo.className = "solo-lectores";
+      var subir = crear("label", "chip", actual && actual.imagen ? "Cambiar imagen" : "Subir imagen");
+      subir.htmlFor = idArchivo;
+      archivo.addEventListener("change", function () {
+        var f = archivo.files[0];
+        if (!f) return;
+        if (f.type.indexOf("image/") !== 0) {
+          $("estado-patrones").textContent = "El archivo debe ser una imagen (PNG, JPG, etc.).";
+          return;
+        }
+        reducirPatron(f).then(function (data) {
+          guardarPatron(t, { imagen: data }, "Guardamos la imagen de patrón de " + t + ".");
+        }, function () {
+          $("estado-patrones").textContent = "No pudimos leer esa imagen. Prueba con otra.";
+        });
+      });
+      acciones.appendChild(archivo);
+      acciones.appendChild(subir);
+      li.appendChild(acciones);
+
+      lista.appendChild(li);
+    });
+  }
+  pintarPatrones();
 
   /* ---------- Restaurar ---------- */
   $("restaurar").addEventListener("click", function () {

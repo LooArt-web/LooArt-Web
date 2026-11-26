@@ -41,6 +41,13 @@
         <p class="error" id="error-tematicas" hidden></p>
       </div>
       <div><button class="btn btn--chico" type="button" id="guardar-tematicas">Guardar temáticas</button></div>
+
+      <div class="patrones-tematica">
+        <h3>Patrón de cada temática</h3>
+        <p class="ayuda">El patrón se pinta en la vista previa del producto y en las opciones de temática que ve el cliente. Elige un motivo o sube una imagen (de preferencia PNG con fondo transparente). Los cambios se guardan al momento.</p>
+        <ul class="patrones" id="patrones"></ul>
+        <p class="ayuda" id="estado-patrones" role="status"></p>
+      </div>
     </section>
 
     <section class="ventana__bloque" aria-labelledby="titulo-restaurar">
@@ -73,6 +80,7 @@
           <option value="termo">Termo</option>
           <option value="taza">Taza</option>
           <option value="sticker">Sticker</option>
+          <option value="pin">Pin (botón)</option>
           <option value="caja">Otro (caja)</option>
         </select>
       </div>
@@ -115,12 +123,25 @@
 
       <div class="campo">
         <span class="etiqueta">Foto <span class="opcional">(opcional)</span></span>
-        <input class="solo-lectores" id="foto" type="file" accept="image/*" aria-describedby="error-foto">
+        <p class="ayuda">Puedes subir un mockup con el frente y el reverso lado a lado, sobre fondo liso o de cuadritos: quitamos el fondo y armamos la vista que se voltea.</p>
+        <input class="solo-lectores" id="foto" type="file" accept="image/*" aria-describedby="error-foto estado-foto">
+        <label class="casilla"><input id="quitar-fondo" type="checkbox" checked> Quitar el fondo y separar frente y reverso</label>
+
         <img class="foto-vista" id="foto-vista" alt="Vista previa de la foto" hidden>
+        <div class="piezas-foto" id="piezas-foto" hidden>
+          <figure><div class="piezas-foto__img" id="pieza-frente"></div><figcaption>Frente <span class="opcional">(aquí se imprime el diseño)</span></figcaption></figure>
+          <figure><div class="piezas-foto__img" id="pieza-reverso"></div><figcaption>Reverso</figcaption></figure>
+        </div>
+        <p class="ayuda" id="estado-foto" role="status"></p>
+
         <div class="acciones">
           <label class="btn btn--secundario btn--chico" for="foto">Elegir foto</label>
+          <button class="chip" type="button" id="intercambiar-foto" hidden>Intercambiar frente y reverso</button>
+          <label class="chip" for="foto-reverso" id="subir-reverso" hidden>Subir reverso aparte</label>
+          <button class="chip" type="button" id="quitar-reverso" hidden>Quitar reverso</button>
           <button class="chip" type="button" id="quitar-foto" hidden>Quitar foto</button>
         </div>
+        <input class="solo-lectores" id="foto-reverso" type="file" accept="image/*" aria-describedby="estado-foto">
         <p class="error" id="error-foto" hidden></p>
       </div>
 
@@ -138,6 +159,7 @@
   <script src="../js/almacen-catalogo.js"></script>
   <script src="../js/precios.js"></script>
   <script src="../js/vista-previa.js"></script>
+  <script src="../js/recorte.js"></script>
   <script src="../js/admin/sesion.js"></script>
   <script src="../js/admin/productos.js"></script>
 </body>

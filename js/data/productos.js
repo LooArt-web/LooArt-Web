@@ -69,3 +69,17 @@ window.LooArt.productos = [
  * desde la vista y permite escribir una temática propia.
  */
 window.LooArt.tematicas = ["[Temática 1]", "[Temática 2]", "[Temática 3]"];
+
+/*
+ * Patrón de cada temática para la vista previa (se edita desde el panel,
+ * sección Temáticas). Cada entrada es { motivo } con uno de los motivos
+ * incluidos (puntos, estrellas, flores, rayas, cuadros, corazones, ondas)
+ * o { imagen } con un patrón subido por el administrador.
+ * Las temáticas sin entrada no pintan patrón: se muestran solo por su nombre.
+ * Estos tres son de ejemplo, igual que las temáticas.
+ */
+window.LooArt.patronesTematica = {
+  "[Temática 1]": { motivo: "puntos" },
+  "[Temática 2]": { motivo: "estrellas" },
+  "[Temática 3]": { motivo: "flores" }
+};

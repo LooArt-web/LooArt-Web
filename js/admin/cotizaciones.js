@@ -282,9 +282,29 @@
         ["Temática", it.tematica === LIBRE ? "Libre: " + it.tematicaLibre : it.tematica],
         ["Texto", it.texto],
         ["Idea", it.descripcion],
-        ["Imagen", it.imagen && it.imagen.nombre ? it.imagen.nombre + (it.imagen.omitida ? " (no se pudo guardar el archivo)" : "") : ""]
+        ["Imagen", it.imagen && it.imagen.nombre ? it.imagen.nombre + (it.imagen.omitida ? " (no se pudo guardar el archivo)" : "") : ""],
+        ["Colocación", it.imagen && datos.vistaPrevia ? datos.vistaPrevia.describirDiseno(it.diseno) : ""]
       ]);
       d.appendChild(dl);
+
+      /* Vista previa tal como la vio el cliente (color, imagen, colocación y texto) */
+      var productoItem = datos.productos.filter(function (p) { return p.id === it.id; })[0];
+      if (productoItem && datos.vistaPrevia) {
+        var caja = crear("div", "detalle-item__vista");
+        var colorItem = (productoItem.colores || []).filter(function (x) { return x.nombre === it.color; })[0];
+        datos.vistaPrevia.crear(productoItem, caja, {
+          interactivo: false,
+          estado: {
+            colorHex: colorItem && colorItem.hex,
+            colorNombre: it.color,
+            arte: it.imagen && it.imagen.data,
+            tematica: it.tematica === LIBRE ? it.tematicaLibre : it.tematica,
+            texto: it.texto,
+            diseno: it.diseno
+          }
+        });
+        d.appendChild(caja);
+      }
       var src = it.imagen ? imagenSegura(it.imagen.data) : null;
       if (src) {
         var img = document.createElement("img");

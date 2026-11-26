@@ -36,6 +36,8 @@
 
   /* Vista previa: foto real o maqueta que cambia con lo que elige el cliente */
   var vista = datos.vistaPrevia.crear(producto, $("foto"));
+  /* Copia junto a los controles de colocación (solo visible en celular) */
+  var vistaColocacion = datos.vistaPrevia.crear(producto, $("vista-colocacion"), { teclado: false });
 
   /* ---------- Opciones tipo chip ---------- */
   function pintarOpciones(contenedorId, nombre, valores, seleccionado, hexDe) {
@@ -80,6 +82,36 @@
   pintarOpciones("op-color", "color", producto.colores.map(function (c) { return c.nombre; }), previo && previo.color, hexColor);
   pintarOpciones("op-tematica", "tematica", datos.tematicas.concat([LIBRE]), tematicaPrevia);
 
+  /*
+   * Temáticas como muestras: cada opción enseña su patrón pintado con el color
+   * elegido. Solo se activa si al menos una temática tiene patrón; si no,
+   * se quedan como opciones de texto.
+   */
+  var conMuestras = datos.tematicas.some(function (t) { return !!datos.vistaPrevia.patronDe(t); });
+  function pintarMuestrasTematica() {
+    if (!conMuestras) return;
+    var base = hexColor(valorElegido("color"));
+    $("op-tematica").classList.add("opciones--tematicas");
+    [].slice.call($("op-tematica").querySelectorAll(".opcion")).forEach(function (op) {
+      var valor = op.querySelector("input").value;
+      var span = op.querySelector("span");
+      var previa = span.querySelector(".tematica__muestra");
+      if (previa) previa.remove();
+      var caja = document.createElement("i");
+      caja.className = "tematica__muestra";
+      var svg = valor === LIBRE ? null : datos.vistaPrevia.muestraTematica(valor, base);
+      if (svg) caja.appendChild(svg);
+      else {
+        /* Sin patrón (o temática libre): letra inicial o lápiz */
+        caja.classList.add("tematica__muestra--vacia");
+        caja.textContent = valor === LIBRE ? "✎" : valor.replace(/[^\p{L}\p{N}]/gu, "").charAt(0).toUpperCase();
+      }
+      span.insertBefore(caja, span.firstChild);
+    });
+  }
+  pintarMuestrasTematica();
+  $("op-color").addEventListener("change", pintarMuestrasTematica);
+
   $("g-presentacion").hidden = producto.presentaciones.length === 0;
   $("g-color").hidden = producto.colores.length === 0;
 
@@ -122,17 +154,59 @@
   actualizarTematicaLibre();
   actualizarBotones();
 
+  /* ---------- Cómo se coloca la imagen ---------- */
+  var VP = datos.vistaPrevia;
+  var AYUDA_COLOCACION = {
+    centro: "Tu imagen va una vez, en la zona de impresión.",
+    repetida: "Tu imagen se repite en miniatura por todo el producto. Funciona mejor con logos o íconos con fondo transparente.",
+    envolvente: "Tu imagen cubre todo el producto, como un vinil completo."
+  };
+
+  function disenoActual() {
+    return VP.normalizarDiseno({
+      modo: valorElegido("colocacion") || "centro",
+      tamano: Number($("tamano").value) / 100,
+      separacion: Number($("separacion").value) / 100,
+      intercalado: $("intercalado").checked
+    });
+  }
+
+  function pintarColocacion() {
+    var d = disenoActual();
+    $("g-colocacion").hidden = !imagen;
+    $("ajustes-repetida").hidden = d.modo !== "repetida";
+    $("ayuda-colocacion").textContent = AYUDA_COLOCACION[d.modo];
+    $("valor-tamano").textContent = d.tamano < 0.34 ? "Chicas" : d.tamano < 0.67 ? "Medianas" : "Grandes";
+    $("valor-separacion").textContent = d.separacion < 0.12 ? "Mínima" : d.separacion < 0.32 ? "Media" : "Amplia";
+    $("tamano").setAttribute("aria-valuetext", $("valor-tamano").textContent);
+    $("separacion").setAttribute("aria-valuetext", $("valor-separacion").textContent);
+  }
+
+  /* Al editar un producto del carrito, se recupera cómo estaba colocada la imagen */
+  if (previo && previo.diseno) {
+    var dPrevio = VP.normalizarDiseno(previo.diseno);
+    var radio = document.querySelector('input[name="colocacion"][value="' + dPrevio.modo + '"]');
+    if (radio) radio.checked = true;
+    $("tamano").value = Math.round(dPrevio.tamano * 100);
+    $("separacion").value = Math.round(dPrevio.separacion * 100);
+    $("intercalado").checked = dPrevio.intercalado;
+  }
+
   /* ---------- Vista previa en vivo ---------- */
   function actualizarVista() {
+    pintarColocacion();
     var color = valorElegido("color");
     var tematica = valorElegido("tematica");
-    vista.actualizar({
+    var estadoVista = {
       colorHex: hexColor(color),
       colorNombre: color,
       arte: imagen && imagen.data ? imagen.data : null,
       tematica: tematica === LIBRE ? $("tematica-libre").value.trim() : tematica,
-      texto: $("texto").value.trim()
-    });
+      texto: $("texto").value.trim(),
+      diseno: imagen ? disenoActual() : null
+    };
+    vista.actualizar(estadoVista);
+    vistaColocacion.actualizar(estadoVista);
   }
   $("formulario").addEventListener("input", actualizarVista);
   $("formulario").addEventListener("change", actualizarVista);
@@ -250,7 +324,9 @@
       tematicaLibre: tematica === LIBRE ? $("tematica-libre").value.trim() : "",
       texto: $("texto").value.trim(),
       descripcion: $("descripcion").value.trim(),
-      imagen: imagen
+      imagen: imagen,
+      /* Cómo se coloca la imagen; viaja al carrito, al folio y al panel */
+      diseno: imagen ? disenoActual() : null
     };
 
     var items = carrito.leer();

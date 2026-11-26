@@ -42,6 +42,9 @@
       lista.push(["Idea", idea]);
     }
     if (it.imagen && it.imagen.nombre) lista.push(["Imagen de referencia", it.imagen.nombre]);
+    if (it.imagen && it.diseno && window.LooArt.vistaPrevia) {
+      lista.push(["Colocación de la imagen", window.LooArt.vistaPrevia.describirDiseno(it.diseno)]);
+    }
     return lista;
   }
 
