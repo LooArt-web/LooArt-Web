@@ -27,6 +27,20 @@ window.LooArt.vistaPrevia = (function () {
 
   function hexValido(h) { return typeof h === "string" && /^#[0-9a-f]{6}$/i.test(h); }
 
+  /* Solo deja pasar direcciones de imagen: data URL de imagen, https o ruta
+     relativa del sitio. Bloquea javascript:, vbscript:, data:text/html, etc.
+     Protege contra datos manipulados en localStorage o, más adelante, en el servidor. */
+  var PATRON_DATA_IMAGEN = /^data:image\/(png|jpe?g|gif|webp|avif|bmp|svg\+xml);base64,[a-z0-9+\/=\s]+$/i;
+  function urlImagenSegura(u) {
+    if (typeof u !== "string") return null;
+    var t = u.trim();
+    if (!t) return null;
+    if (PATRON_DATA_IMAGEN.test(t)) return t;
+    if (/^https:\/\//i.test(t)) return t;
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(t) && t.indexOf("//") !== 0 && t.indexOf("\\") === -1) return t;
+    return null;
+  }
+
   function oscurecer(hex, f) {
     var n = parseInt(hex.slice(1), 16);
     var canales = [n >> 16, (n >> 8) & 255, n & 255].map(function (v) {
@@ -68,8 +82,9 @@ window.LooArt.vistaPrevia = (function () {
     var cx = x + w / 2;
 
     return function (e) {
-      var conArte = !!e.arte;
-      if (conArte) arte.setAttribute("href", e.arte);
+      var arteUrl = urlImagenSegura(e.arte);
+      var conArte = !!arteUrl;
+      if (conArte) arte.setAttribute("href", arteUrl);
       arte.style.display = conArte ? "" : "none";
       fondo.setAttribute("stroke-opacity", conArte ? "0" : "1");
 
@@ -164,7 +179,7 @@ window.LooArt.vistaPrevia = (function () {
     contenedor.style.position = "relative";
 
     var foto = document.createElement("img");
-    foto.src = producto.imagen;
+    foto.src = urlImagenSegura(producto.imagen);
     foto.alt = producto.nombre;
     foto.style.cssText = "width:100%;height:100%;object-fit:cover;display:block";
     contenedor.appendChild(foto);
@@ -194,8 +209,9 @@ window.LooArt.vistaPrevia = (function () {
         color.style.background = e.colorHex;
         color.title = "Color: " + (e.colorNombre || "");
       }
-      arte.hidden = !e.arte;
-      if (e.arte) miniaturaArte.src = e.arte;
+      var arteUrl = urlImagenSegura(e.arte);
+      arte.hidden = !arteUrl;
+      if (arteUrl) miniaturaArte.src = arteUrl;
     }
     actualizar(opciones.estado);
     return { actualizar: actualizar };
@@ -204,7 +220,7 @@ window.LooArt.vistaPrevia = (function () {
   /* ---------- Maqueta dibujada ---------- */
   function crear(producto, contenedor, opciones) {
     opciones = opciones || {};
-    if (producto.imagen) return conFoto(producto, contenedor, opciones);
+    if (urlImagenSegura(producto.imagen)) return conFoto(producto, contenedor, opciones);
 
     contenedor.textContent = "";
     var svg = el("svg", { viewBox: "0 0 320 320", class: "vista-previa" });
@@ -230,5 +246,5 @@ window.LooArt.vistaPrevia = (function () {
     return { actualizar: actualizar };
   }
 
-  return { crear: crear };
+  return { crear: crear, hexValido: hexValido, urlImagenSegura: urlImagenSegura };
 })();

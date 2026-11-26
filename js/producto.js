@@ -51,7 +51,7 @@
       radio.checked = valor === seleccionado;
       var texto = document.createElement("span");
       var hex = hexDe ? hexDe(valor) : null;
-      if (hex) {
+      if (window.LooArt.vistaPrevia.hexValido(hex)) {
         var muestra = document.createElement("i");
         muestra.className = "muestra";
         muestra.style.background = hex;
@@ -259,15 +259,15 @@
     if (posicion >= 0) items[posicion] = item; else items.push(item);
 
     if (!carrito.guardar(items)) {
-      mostrarError("guardar", "No pudimos guardar tu cotización en este navegador. Quita la imagen de referencia e inténtalo de nuevo.");
+      mostrarError("guardar", "No pudimos guardar tu carrito en este navegador. Quita la imagen de referencia e inténtalo de nuevo.");
       return;
     }
 
     pintarConteo();
     $("vista").hidden = true;
     $("confirmacion-titulo").textContent = previo
-      ? "Actualizamos " + producto.nombre + " en tu cotización"
-      : "Agregamos " + producto.nombre + " a tu cotización";
+      ? "Actualizamos " + producto.nombre + " en tu carrito"
+      : "Agregamos " + producto.nombre + " a tu carrito";
     $("confirmacion").hidden = false;
     $("confirmacion-titulo").focus();
     window.scrollTo(0, 0);

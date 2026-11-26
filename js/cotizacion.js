@@ -191,7 +191,7 @@
       items.splice(indice, 1);
       guardarCarrito();
       pintar();
-      mostrarEstado("Quitamos " + producto.nombre + " de tu cotización.", deshacer);
+      mostrarEstado("Quitamos " + producto.nombre + " de tu carrito.", deshacer);
       $("estado").focus();
     });
 
@@ -232,7 +232,7 @@
   $("aviso-demo").hidden = !config.preciosDeEjemplo;
   pintar();
   if (noDisponibles.length) {
-    mostrarEstado("Quitamos de tu cotización " +
+    mostrarEstado("Quitamos de tu carrito " +
       noDisponibles.map(function (i) { return i.nombre; }).join(", ") +
       " porque ya no está disponible.");
     $("vista").hidden = false;

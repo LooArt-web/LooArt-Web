@@ -20,6 +20,14 @@
     return el;
   }
 
+  /* ---------- Saneado de datos del cliente antes de usarlos en enlaces e imágenes ----------
+     Los textos ya se pintan con textContent; esto cubre los atributos href/src,
+     donde un dato manipulado podría colar un esquema como javascript:. */
+  var PATRON_DATA_IMAGEN = /^data:image\/(png|jpe?g|gif|webp|avif|bmp|svg\+xml);base64,[a-z0-9+\/=\s]+$/i;
+  function imagenSegura(u) { return typeof u === "string" && PATRON_DATA_IMAGEN.test(u) ? u : null; }
+  function celularSeguro(t) { var d = String(t || "").replace(/\D/g, ""); return d.length === 10 ? d : null; }
+  function correoSeguro(t) { return typeof t === "string" && /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(t) ? t : null; }
+
   function dosDigitos(n) { return String(n).padStart(2, "0"); }
 
   function fechaLocal(iso) {
@@ -186,7 +194,9 @@
     });
   }
 
+  /* Sin dirección válida se muestra solo el texto */
   function enlace(texto, href) {
+    if (!href) return crear("span", "", texto);
     var a = crear("a", "", texto);
     a.href = href;
     return a;
@@ -239,13 +249,17 @@
     var b2 = crear("div", "ventana__bloque");
     b2.appendChild(crear("h3", "", "Cliente"));
     var dl2 = crear("dl", "datos-lista");
-    var wa = enlace(c.cliente.celular + " (abrir WhatsApp)", "https://wa.me/52" + c.cliente.celular);
-    wa.target = "_blank";
-    wa.rel = "noopener";
+    var celular = celularSeguro(c.cliente.celular);
+    var wa = enlace(String(c.cliente.celular || "") + (celular ? " (abrir WhatsApp)" : ""), celular ? "https://wa.me/52" + celular : null);
+    if (celular) {
+      wa.target = "_blank";
+      wa.rel = "noopener noreferrer";
+    }
+    var correo = correoSeguro(c.cliente.correo);
     lista(dl2, [
       ["Nombre", c.cliente.nombre],
       ["Celular", wa],
-      ["Correo", enlace(c.cliente.correo, "mailto:" + c.cliente.correo)],
+      ["Correo", enlace(String(c.cliente.correo || ""), correo ? "mailto:" + correo : null)],
       ["Código postal", c.cliente.cp]
     ]);
     b2.appendChild(dl2);
@@ -271,9 +285,10 @@
         ["Imagen", it.imagen && it.imagen.nombre ? it.imagen.nombre + (it.imagen.omitida ? " (no se pudo guardar el archivo)" : "") : ""]
       ]);
       d.appendChild(dl);
-      if (it.imagen && it.imagen.data) {
+      var src = it.imagen ? imagenSegura(it.imagen.data) : null;
+      if (src) {
         var img = document.createElement("img");
-        img.src = it.imagen.data;
+        img.src = src;
         img.alt = "Imagen de referencia: " + it.imagen.nombre;
         d.appendChild(img);
       }

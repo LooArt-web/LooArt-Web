@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Sin ícono de pestaña hasta tener el logo autorizado (evita que el navegador muestre uno ajeno) -->
+  <link rel="icon" href="data:,">
   <meta name="robots" content="noindex, nofollow">
-  <title>Acceso administrador | LooArt</title>
+  <title>Acceso al panel | LooArt</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,23 +20,27 @@
   <main class="acceso">
     <div class="acceso__tarjeta">
       <a class="logo" href="../index.html">Loo<span>Art</span></a>
-      <h1 id="titulo">Acceso administrador</h1>
+      <h1 id="titulo">Acceso al panel</h1>
       <p class="ayuda" id="ayuda"></p>
 
       <form id="formulario" novalidate>
         <div class="campo">
+          <label for="usuario">Usuario</label>
+          <input id="usuario" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="30" aria-describedby="error-acceso">
+        </div>
+        <div class="campo">
           <label for="contrasena" id="etiqueta-contrasena">Contraseña</label>
-          <input id="contrasena" type="password" autocomplete="current-password" aria-describedby="error-contrasena">
+          <input id="contrasena" type="password" autocomplete="current-password" aria-describedby="error-acceso">
         </div>
         <div class="campo" id="g-repetir" hidden>
           <label for="repetir">Repite la contraseña</label>
-          <input id="repetir" type="password" autocomplete="new-password">
+          <input id="repetir" type="password" autocomplete="new-password" aria-describedby="error-acceso">
         </div>
-        <p class="error" id="error-contrasena" role="alert" hidden></p>
+        <p class="error" id="error-acceso" role="alert" hidden></p>
         <button class="btn" type="submit" id="enviar">Entrar</button>
       </form>
 
-      <p class="aviso-admin">Demostración: sin servidor, este acceso solo protege el panel en este navegador. No es seguridad real.</p>
+      <p class="aviso-admin">Demostración: sin servidor, este acceso solo protege el panel en este navegador. No es seguridad real. Los clientes no necesitan cuenta para cotizar.</p>
     </div>
   </main>
 

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Sin ícono de pestaña hasta tener el logo autorizado (evita que el navegador muestre uno ajeno) -->
+  <link rel="icon" href="data:,">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Soporte técnico | Admin LooArt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <header id="cabecera"></header>
+
+  <main class="contenedor contenedor--ancho admin" id="principal" hidden>
+    <div class="admin__titulo">
+      <div>
+        <h1>Soporte técnico</h1>
+        <p class="admin__subtitulo">Solo visible para la cuenta de soporte. Los cambios afectan únicamente a este navegador.</p>
+      </div>
+    </div>
+
+    <p class="aviso-admin" id="aviso" role="status" hidden></p>
+
+    <div class="tablero">
+      <!-- Usuarios del panel -->
+      <section class="tarjeta-panel tarjeta-panel--ancha" aria-labelledby="t-usuarios">
+        <h2 id="t-usuarios">Usuarios del panel</h2>
+        <p class="tarjeta-panel__nota">Administrador: resumen, cotizaciones, reportes y productos. Soporte técnico: todo eso más esta sección.</p>
+
+        <div class="tabla-envoltura">
+          <table class="tabla tabla--tarjetas">
+            <thead>
+              <tr>
+                <th scope="col">Usuario</th>
+                <th scope="col">Rol</th>
+                <th scope="col">Alta</th>
+                <th scope="col"><span class="solo-lectores">Acciones</span></th>
+              </tr>
+            </thead>
+            <tbody id="usuarios"></tbody>
+          </table>
+        </div>
+
+        <form class="formulario-admin alta-usuario" id="alta" novalidate>
+          <h3>Agregar usuario</h3>
+          <div class="alta-usuario__campos">
+            <div class="campo">
+              <label for="nuevo-usuario">Usuario</label>
+              <input id="nuevo-usuario" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="30" aria-describedby="ayuda-usuario">
+              <p class="ayuda" id="ayuda-usuario">De 3 a 30 caracteres: letras sin acentos, números, punto, guion o guion bajo.</p>
+            </div>
+            <div class="campo">
+              <label for="nuevo-rol">Rol</label>
+              <select id="nuevo-rol">
+                <option value="admin">Administrador</option>
+                <option value="superusuario">Soporte técnico</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="nueva-contrasena">Contraseña</label>
+              <input id="nueva-contrasena" type="password" autocomplete="new-password">
+            </div>
+            <div class="campo">
+              <label for="nueva-repetir">Repite la contraseña</label>
+              <input id="nueva-repetir" type="password" autocomplete="new-password">
+            </div>
+          </div>
+          <p class="error" id="error-alta" role="alert" hidden></p>
+          <div><button class="btn btn--chico" type="submit" id="agregar">Agregar usuario</button></div>
+        </form>
+      </section>
+
+      <!-- Almacenamiento -->
+      <section class="tarjeta-panel" aria-labelledby="t-almacen">
+        <h2 id="t-almacen">Almacenamiento del navegador</h2>
+        <p class="tarjeta-panel__nota" id="almacen-nota"></p>
+        <div class="barras-h" id="almacen-medidor"></div>
+        <ul class="almacen" id="almacen"></ul>
+        <div class="acciones">
+          <button class="btn btn--secundario btn--chico" type="button" id="limpiar-cache">Limpiar caché del sitio</button>
+          <button class="btn btn--peligro btn--chico" type="button" id="borrar-todo">Borrar todos los datos</button>
+        </div>
+        <p class="ayuda">“Borrar todos los datos” elimina carrito, cotizaciones, datos de cliente y cambios al catálogo. Conserva los usuarios del panel y tu sesión.</p>
+      </section>
+
+      <!-- Diagnóstico -->
+      <section class="tarjeta-panel" aria-labelledby="t-diagnostico">
+        <h2 id="t-diagnostico">Diagnóstico del sistema</h2>
+        <p class="tarjeta-panel__nota" id="diagnostico-nota"></p>
+        <ul class="diagnostico" id="diagnostico"></ul>
+        <div class="acciones">
+          <button class="btn btn--secundario btn--chico" type="button" id="revisar">Volver a revisar</button>
+          <button class="btn btn--secundario btn--chico" type="button" id="copiar">Copiar diagnóstico</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <dialog class="ventana" id="ventana-contrasena" aria-labelledby="titulo-contrasena">
+    <form class="ventana__cuerpo formulario-admin" id="form-contrasena" novalidate>
+      <h2 id="titulo-contrasena">Cambiar contraseña</h2>
+      <div class="campo">
+        <label for="cambio-contrasena">Nueva contraseña (mínimo 8 caracteres)</label>
+        <input id="cambio-contrasena" type="password" autocomplete="new-password">
+      </div>
+      <div class="campo">
+        <label for="cambio-repetir">Repite la contraseña</label>
+        <input id="cambio-repetir" type="password" autocomplete="new-password">
+      </div>
+      <p class="error" id="error-contrasena" role="alert" hidden></p>
+      <div class="ventana__pie">
+        <button class="btn btn--secundario btn--chico" type="button" id="cancelar-contrasena">Cancelar</button>
+        <button class="btn btn--chico" type="submit">Guardar contraseña</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="../js/data/productos.js"></script>
+  <script src="../js/almacen-catalogo.js"></script>
+  <script src="../js/admin/sesion.js"></script>
+  <script src="../js/admin/soporte.js"></script>
+</body>
+</html>

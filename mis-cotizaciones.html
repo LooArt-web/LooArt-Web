@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Sin ícono de pestaña hasta tener el logo autorizado (evita que el navegador muestre uno ajeno) -->
+  <link rel="icon" href="data:,">
+  <title>Mis cotizaciones | LooArt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/panel.css">
+</head>
+<body class="app">
+
+  <!-- Menú del cliente (igual en index.html, mis-cotizaciones.html y cotizacion.html) -->
+  <aside class="menu-app">
+    <a class="logo" href="index.html" aria-label="LooArt, ir al catálogo">Loo<span>Art</span></a>
+    <nav class="nav" aria-label="Principal">
+      <a class="nav__enlace" href="index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7l8-4 8 4v10l-8 4-8-4zM4 7l8 4 8-4M12 11v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        Catálogo
+      </a>
+      <a class="nav__enlace" href="mis-cotizaciones.html" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        Mis cotizaciones
+      </a>
+      <a class="nav__enlace" href="cotizacion.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.3 11.1a1 1 0 0 0 1 .9h8.8a1 1 0 0 0 1-.8L20 8H6.1M9.5 21a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5zM17 21a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        Mi carrito
+        <span class="nav__conteo" id="conteo" aria-label="productos">0</span>
+      </a>
+    </nav>
+    <p class="menu-app__usuario" id="menu-usuario"></p>
+  </aside>
+
+  <main class="principal historial">
+    <header class="principal__cabecera">
+      <div>
+        <h1>Mis cotizaciones</h1>
+        <p class="principal__subtitulo">Los folios que generaste desde este dispositivo.</p>
+      </div>
+      <a class="btn" href="index.html" id="nueva-cotizacion">
+        <svg class="btn__icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        Nueva cotización
+      </a>
+    </header>
+
+    <!-- Se llena desde js/mis-cotizaciones.js -->
+    <div class="historial__contenido" id="historial"></div>
+  </main>
+
+  <script src="js/data/productos.js"></script>
+  <script src="js/almacen-catalogo.js"></script>
+  <script src="js/precios.js"></script>
+  <script src="js/carrito.js"></script>
+  <script src="js/cotizaciones.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/mis-cotizaciones.js"></script>
+</body>
+</html>

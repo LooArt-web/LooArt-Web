@@ -1,4 +1,10 @@
-/* Acceso del administrador: crear contraseña la primera vez, después iniciar sesión */
+/*
+ * Acceso al panel con usuario y contraseña.
+ * - Primera vez en este navegador (sin usuarios): se crea la cuenta de soporte
+ *   técnico (superusuario). Desde su sección "Soporte técnico" se dan de alta
+ *   los administradores.
+ * - Después: cada persona entra con su usuario; el rol sale de su cuenta.
+ */
 (function () {
   var admin = window.LooArt.admin;
   var DESTINO = "dashboard.html";
@@ -10,11 +16,14 @@
     return;
   }
 
-  function error(texto) {
-    var p = $("error-contrasena");
+  function error(texto, campo) {
+    var p = $("error-acceso");
     p.textContent = texto;
     p.hidden = !texto;
-    $("contrasena").setAttribute("aria-invalid", texto ? "true" : "false");
+    ["usuario", "contrasena", "repetir"].forEach(function (id) {
+      $(id).setAttribute("aria-invalid", texto && (!campo || campo === id) ? "true" : "false");
+    });
+    if (campo) $(campo).focus();
   }
 
   if (!admin.disponible()) {
@@ -26,35 +35,54 @@
   var primeraVez = !admin.existe();
 
   if (primeraVez) {
-    $("titulo").textContent = "Crea tu contraseña";
-    $("ayuda").textContent = "Es la primera vez que entras. Elige una contraseña de al menos 8 caracteres; la necesitarás cada vez que abras el panel.";
-    $("etiqueta-contrasena").textContent = "Nueva contraseña";
+    $("titulo").textContent = "Configura el acceso";
+    $("ayuda").textContent = "Es la primera vez que se abre el panel en este navegador. Crea la cuenta de soporte técnico; desde ella podrás dar de alta a los administradores.";
     $("contrasena").autocomplete = "new-password";
+    $("etiqueta-contrasena").textContent = "Contraseña (mínimo 8 caracteres)";
     $("g-repetir").hidden = false;
-    $("enviar").textContent = "Crear contraseña y entrar";
+    $("enviar").textContent = "Crear cuenta y entrar";
   } else {
-    $("ayuda").textContent = "Escribe tu contraseña para continuar.";
+    $("ayuda").textContent = "Escribe tu usuario y contraseña.";
   }
+
+  var MENSAJES = {
+    "usuario-invalido": ["El usuario debe tener de 3 a 30 caracteres: letras sin acentos, números, punto, guion o guion bajo.", "usuario"],
+    "contrasena-corta": ["La contraseña debe tener al menos 8 caracteres.", "contrasena"],
+    "sin-espacio": ["El navegador no tiene espacio para guardar la cuenta. Libera espacio e inténtalo de nuevo.", null],
+    "ya-configurado": ["Ya existe una cuenta en este navegador. Recarga la página para iniciar sesión.", null]
+  };
+
+  var ocupado = false;
 
   $("formulario").addEventListener("submit", function (e) {
     e.preventDefault();
+    if (ocupado) return;
     error("");
+    var usuario = $("usuario").value.trim().toLowerCase();
     var contrasena = $("contrasena").value;
 
-    if (primeraVez) {
-      if (contrasena.length < 8) { error("La contraseña debe tener al menos 8 caracteres."); $("contrasena").focus(); return; }
-      if (contrasena !== $("repetir").value) { error("Las contraseñas no coinciden."); $("repetir").focus(); return; }
-      admin.crearContrasena(contrasena).then(function () {
-        window.location.href = DESTINO;
-      });
+    if (!usuario) { error("Escribe tu usuario.", "usuario"); return; }
+    if (!contrasena) { error("Escribe tu contraseña.", "contrasena"); return; }
+
+    if (primeraVez && contrasena !== $("repetir").value) {
+      error("Las contraseñas no coinciden.", "repetir");
       return;
     }
 
-    if (!contrasena) { error("Escribe tu contraseña."); $("contrasena").focus(); return; }
-    admin.entrar(contrasena).then(function (ok) {
-      if (ok) { window.location.href = DESTINO; return; }
-      error("La contraseña no es correcta.");
+    ocupado = true;
+    $("enviar").disabled = true;
+    var accion = primeraVez ? admin.configurarInicio(usuario, contrasena) : admin.entrar(usuario, contrasena);
+
+    accion.then(function (rol) {
+      if (rol) { window.location.href = DESTINO; return; }
+      error("El usuario o la contraseña no son correctos.", "contrasena");
       $("contrasena").select();
+    }, function (err) {
+      var m = MENSAJES[err && err.codigo] || ["No pudimos completar el acceso. Inténtalo de nuevo.", null];
+      error(m[0], m[1]);
+    }).then(function () {
+      ocupado = false;
+      $("enviar").disabled = false;
     });
   });
 })();

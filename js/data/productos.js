@@ -43,7 +43,7 @@ window.LooArt.productos = [
     colores: []
   },
   {
-    id: "producto-3", nombre: "Producto 3", categoria: "Categoría 3", minimo: 5, imagen: null, modelo: "taza", pendiente: true,
+    id: "producto-3", nombre: "Producto 3", categoria: "Tazas", minimo: 5, imagen: null, modelo: "taza", pendiente: true,
     precio: 120, mayoreo: { desde: 10, precio: 100 },
     presentaciones: ["[Presentación A]", "[Presentación B]"],
     colores: [
@@ -53,7 +53,7 @@ window.LooArt.productos = [
     ]
   },
   {
-    id: "producto-4", nombre: "Producto 4", categoria: "Categoría 3", minimo: 5, imagen: null, modelo: "caja", pendiente: true,
+    id: "producto-4", nombre: "Producto 4", categoria: "Cajas", minimo: 5, imagen: null, modelo: "caja", pendiente: true,
     precio: 90, mayoreo: { desde: 10, precio: 75 },
     presentaciones: ["[Presentación A]", "[Presentación B]"],
     colores: [

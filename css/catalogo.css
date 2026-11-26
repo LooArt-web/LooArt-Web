@@ -102,3 +102,22 @@
   .tarjeta { padding: var(--space-4); }
   .barra-cotizacion .btn { width: fit-content; margin-left: auto; }
 }
+
+/* Categorías y buscador en una misma fila */
+.filtros-catalogo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.filtros-catalogo nav { flex: 1 1 auto; min-width: 0; }
+.filtros-catalogo .buscador { flex: 0 1 20rem; width: 100%; max-width: none; }
+
+@media (max-width: 719px) {
+  .filtros-catalogo { flex-direction: column-reverse; align-items: stretch; }
+  .filtros-catalogo .buscador { flex-basis: auto; }
+}
+
+/* Bloque de productos dentro de la vista Catálogo */
+.catalogo__productos { display: grid; gap: var(--space-4); }

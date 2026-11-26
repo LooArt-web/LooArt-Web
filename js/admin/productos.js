@@ -139,8 +139,9 @@
   }
 
   function pintarFoto() {
-    $("foto-vista").hidden = !foto;
-    if (foto) $("foto-vista").src = foto;
+    var segura = datos.vistaPrevia.urlImagenSegura(foto);
+    $("foto-vista").hidden = !segura;
+    if (segura) $("foto-vista").src = segura;
     $("quitar-foto").hidden = !foto;
   }
 
@@ -183,7 +184,7 @@
     $("presentaciones").value = p ? p.presentaciones.join("\n") : "";
     $("colores").value = p ? coloresATexto(p.colores) : "";
     $("visible").checked = p ? p.visible !== false : true;
-    foto = p && p.imagen ? p.imagen : null;
+    foto = p && p.imagen ? datos.vistaPrevia.urlImagenSegura(p.imagen) : null;
     $("foto").value = "";
     pintarFoto();
 

@@ -1,6 +1,26 @@
 /* Vista 1: Catálogo — búsqueda, filtro por categoría y contador de cotización */
 (function () {
-  var productos = window.LooArt.productos.filter(function (p) { return p.visible !== false; });
+  /*
+   * Las categorías salen del propio catálogo. Si un producto todavía trae un
+   * nombre provisional ("Categoría 3", vacío…), se usa el de su tipo de
+   * producto para no mostrar textos de relleno al cliente.
+   */
+  var POR_MODELO = { termo: "Termos", taza: "Tazas", sticker: "Stickers", caja: "Cajas" };
+  function categoriaReal(p) {
+    var c = (p.categoria || "").trim();
+    if (!c || /^(categor[ií]a|category)\s*\d*$/i.test(c) || /^\[.*\]$/.test(c)) {
+      return POR_MODELO[p.modelo] || "Otros";
+    }
+    return c;
+  }
+
+  var productos = window.LooArt.productos
+    .filter(function (p) { return p.visible !== false; })
+    .map(function (p) {
+      var copia = Object.assign({}, p);
+      copia.categoria = categoriaReal(p);
+      return copia;
+    });
   var carrito = window.LooArt.carrito;
 
   var estado = { categoria: "Todos", texto: "" };
@@ -76,7 +96,7 @@
     });
 
     enlace.appendChild(foto);
-    enlace.appendChild(crear("h2", "tarjeta__nombre", p.nombre));
+    enlace.appendChild(crear("h3", "tarjeta__nombre", p.nombre));
     enlace.appendChild(crear("p", "tarjeta__minimo", "Mínimo " + piezas(p.minimo)));
     enlace.appendChild(crear("span", "tarjeta__accion", "Personalizar"));
     li.appendChild(enlace);

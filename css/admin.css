@@ -261,3 +261,42 @@ dialog.ventana::backdrop { background: rgba(30, 27, 43, 0.55); }
   .tablero { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tarjeta-panel--ancha { grid-column: 1 / -1; }
 }
+
+/* Usuario y rol en el menú */
+.admin-usuario { display: grid; gap: 2px; margin: 0; padding: 0 var(--space-1); font-size: 0.875rem; line-height: 1.3; }
+.admin-usuario strong { font-weight: 600; overflow-wrap: anywhere; }
+.admin-usuario span { font-size: 0.75rem; opacity: 0.7; }
+@media (max-width: 959px) {
+  .admin-usuario { align-self: center; }
+}
+
+/* Sección exclusiva de soporte técnico: separada del resto del menú */
+.admin-nav__exclusiva { padding-left: var(--space-2); border-left: 1px solid rgba(255, 255, 255, 0.2); }
+@media (min-width: 960px) {
+  .admin-nav__exclusiva { margin-top: var(--space-3); padding: var(--space-3) 0 0; border-left: 0; border-top: 1px solid rgba(255, 255, 255, 0.2); }
+}
+
+/* Soporte técnico */
+.alta-usuario { padding-top: var(--space-4); border-top: 1px solid var(--color-line); }
+.alta-usuario h3 { font-size: 1rem; }
+.alta-usuario__campos { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); align-items: start; }
+.acciones--fila { gap: var(--space-2); justify-content: flex-end; }
+.tabla td .etiqueta-chica { margin-left: 8px; }
+
+.almacen { display: grid; }
+.almacen__fila { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-line); }
+.almacen__fila:first-child { border-top: 0; }
+.almacen__texto { display: grid; gap: 2px; min-width: 0; }
+.almacen__texto span { color: var(--color-muted); font-size: 0.8125rem; overflow-wrap: anywhere; }
+.almacen__vacio { color: var(--color-muted); font-size: 0.875rem; }
+.barra-h__relleno--alerta { background: #8A2E22; }
+
+.diagnostico { display: grid; }
+.diagnostico__fila { display: grid; grid-template-columns: 7.5rem 1fr; gap: var(--space-3); align-items: start; padding: var(--space-3) 0; border-top: 1px solid var(--color-line); }
+.diagnostico__fila:first-child { border-top: 0; }
+.diagnostico__fila .insignia { justify-self: start; }
+.diagnostico__texto { display: grid; gap: 2px; min-width: 0; font-size: 0.875rem; }
+.diagnostico__texto span { color: var(--color-muted); overflow-wrap: anywhere; }
+@media (max-width: 479px) {
+  .diagnostico__fila { grid-template-columns: 1fr; gap: var(--space-1); }
+}

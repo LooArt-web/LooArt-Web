@@ -1,0 +1,170 @@
+/*
+ * Componentes de las vistas del cliente:
+ *  - "¿Cómo funciona?" en index.html
+ *  - Indicadores, tabla de folios y estado vacío en mis-cotizaciones.html
+ * La estructura y el menú están en css/app.css.
+ */
+
+/* ---------- ¿Cómo funciona? (franja horizontal) ---------- */
+.como-funciona {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.como-funciona h2 { font: 600 0.9375rem var(--font-body); color: var(--color-muted); }
+
+.pasos { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; counter-reset: paso; }
+.paso {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 2px var(--space-2);
+  align-content: start;
+  counter-increment: paso;
+}
+.paso::before {
+  content: counter(paso);
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-tint);
+  color: var(--color-accent);
+  font: 700 0.875rem var(--font-display);
+}
+.paso strong { font-size: 0.875rem; line-height: 1.3; }
+.paso span { color: var(--color-muted); font-size: 0.8125rem; line-height: 1.35; }
+
+@media (min-width: 600px) {
+  .pasos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1100px) {
+  .como-funciona {
+    grid-template-columns: 9rem minmax(0, 1fr);
+    align-items: center;
+    padding: var(--space-4) var(--space-5);
+  }
+}
+
+/* ---------- Indicadores ---------- */
+.indicadores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.indicador {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px var(--space-2);
+  align-content: start;
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  color: inherit;
+  text-decoration: none;
+}
+a.indicador { transition: border-color 0.15s; }
+a.indicador:hover { border-color: var(--color-ink); }
+.indicador__etiqueta { grid-column: 1; grid-row: 1; color: var(--color-muted); font-size: 0.8125rem; font-weight: 600; }
+.indicador__icono {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--color-tint);
+  color: var(--color-accent);
+}
+.indicador__icono svg { width: 20px; height: 20px; }
+.indicador__valor {
+  grid-column: 1;
+  font: 700 1.75rem/1.2 var(--font-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.indicador__detalle { grid-column: 1 / -1; color: var(--color-muted); font-size: 0.8125rem; }
+
+@media (max-width: 479px) {
+  .indicador { padding: var(--space-3); }
+  .indicador__icono { display: none; }
+  .indicador__valor { font-size: 1.5rem; }
+}
+
+/* ---------- Tarjeta con listado de folios ---------- */
+.tarjeta-panel {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.tarjeta-panel__titulo { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-1) var(--space-3); }
+.tarjeta-panel h2 { font-size: 1rem; }
+.tarjeta-panel__nota { color: var(--color-muted); font-size: 0.8125rem; }
+@media (min-width: 720px) {
+  .indicadores { gap: var(--space-4); }
+  .tarjeta-panel { padding: var(--space-5); }
+}
+
+.tabla-envoltura { overflow-x: auto; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.tabla th, .tabla td { padding: var(--space-3) var(--space-2); border-top: 1px solid var(--color-line); text-align: left; vertical-align: middle; }
+.tabla th:first-child, .tabla td:first-child { padding-left: 0; }
+.tabla th:last-child, .tabla td:last-child { padding-right: 0; }
+.tabla thead th { border-top: 0; color: var(--color-muted); font-size: 0.8125rem; font-weight: 600; }
+.tabla .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tabla tbody tr:hover { background: #FCFAF7; }
+.tabla .apagado { color: var(--color-muted); font-size: 0.875rem; white-space: nowrap; }
+.enlace-folio { color: var(--color-accent); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+@media (max-width: 719px) {
+  .tabla--tarjetas thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .tabla--tarjetas, .tabla--tarjetas tbody, .tabla--tarjetas tr, .tabla--tarjetas td { display: block; }
+  .tabla--tarjetas tr { padding: var(--space-2) 0; border-top: 1px solid var(--color-line); }
+  .tabla--tarjetas tr:first-child { border-top: 0; }
+  .tabla--tarjetas td { display: flex; justify-content: space-between; gap: var(--space-3); border: 0; padding: 5px 0 !important; text-align: right; }
+  .tabla--tarjetas td::before { content: attr(data-etiqueta); color: var(--color-muted); font-size: 0.8125rem; font-weight: 600; text-align: left; }
+}
+
+.ver-todas {
+  justify-self: start;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: 600 0.875rem var(--font-body);
+  cursor: pointer;
+}
+.ver-todas:hover { text-decoration: underline; }
+
+/* Insignias de estado (mismos colores que el admin; llevan texto, no dependen solo del color) */
+.insignia { display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+.insignia--nueva { background: #E4EEFB; color: #1B4F8F; }
+.insignia--pendiente { background: #FBEFD0; color: #7A5200; }
+.insignia--atendida { background: #E6E1F5; color: #4A3A8A; }
+.insignia--aceptada { background: #DDF1E2; color: #1F6A36; }
+.insignia--cancelada { background: #F1E4E2; color: #8A2E22; }
+.insignia--vencida { background: var(--color-line); color: var(--color-muted); }
+
+/* ---------- Sin cotizaciones ---------- */
+.sin-folios {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  max-width: 34rem;
+  padding: var(--space-5);
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-card);
+}
+.sin-folios h2 { font-size: 1.25rem; }
+.sin-folios p { color: var(--color-muted); }
+
+/* Contenido de mis-cotizaciones.html */
+.historial__contenido { display: grid; gap: var(--space-4); }

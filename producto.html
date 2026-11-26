@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Sin ícono de pestaña hasta tener el logo autorizado (evita que el navegador muestre uno ajeno) -->
+  <link rel="icon" href="data:,">
   <title>Personaliza tu producto | LooArt</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +19,7 @@
 
   <header class="contenedor cabecera">
     <a class="logo" href="index.html" aria-label="LooArt, ir al catálogo">Loo<span>Art</span></a>
-    <a class="chip chip--activo" href="cotizacion.html">Mi cotización (<span id="conteo">0</span>)</a>
+    <a class="chip chip--activo" href="cotizacion.html">Mi carrito (<span id="conteo">0</span>)</a>
   </header>
 
   <main class="contenedor producto">
@@ -106,7 +108,7 @@
           </div>
 
           <p class="error" id="error-guardar" role="alert" hidden></p>
-          <button class="btn" type="submit">Agregar a mi cotización</button>
+          <button class="btn" type="submit">Agregar a mi carrito</button>
         </form>
       </div>
     </div>
@@ -114,9 +116,9 @@
     <!-- Confirmación -->
     <section class="aviso" id="confirmacion" hidden>
       <h1 id="confirmacion-titulo" tabindex="-1"></h1>
-      <p>Puedes seguir agregando productos o revisar tu cotización.</p>
+      <p>Puedes seguir agregando productos o revisar tu carrito.</p>
       <div class="acciones">
-        <a class="btn" href="cotizacion.html">Ver mi cotización</a>
+        <a class="btn" href="cotizacion.html">Ver mi carrito</a>
         <a class="btn btn--secundario" href="index.html">Seguir cotizando</a>
       </div>
     </section>

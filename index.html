@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Sin ícono de pestaña hasta tener el logo autorizado (evita que el navegador muestre uno ajeno) -->
+  <link rel="icon" href="data:,">
   <title>LooArt | Productos personalizados</title>
   <meta name="description" content="Elige tu producto, cuéntanos tu idea y recibe tu cotización por WhatsApp.">
 
@@ -12,43 +14,77 @@
 
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
   <link rel="stylesheet" href="css/catalogo.css">
+  <link rel="stylesheet" href="css/panel.css">
 </head>
-<body>
+<body class="app">
 
-  <header class="contenedor cabecera">
+  <!-- Menú del cliente (igual en index.html, mis-cotizaciones.html y cotizacion.html) -->
+  <aside class="menu-app">
     <a class="logo" href="index.html" aria-label="LooArt, ir al catálogo">Loo<span>Art</span></a>
-    <a class="chip chip--activo" href="cotizacion.html">Mi cotización (<span id="conteo">0</span>)</a>
-  </header>
+    <nav class="nav" aria-label="Principal">
+      <a class="nav__enlace" href="index.html" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7l8-4 8 4v10l-8 4-8-4zM4 7l8 4 8-4M12 11v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        Catálogo
+      </a>
+      <a class="nav__enlace" href="mis-cotizaciones.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        Mis cotizaciones
+      </a>
+      <a class="nav__enlace" href="cotizacion.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.3 11.1a1 1 0 0 0 1 .9h8.8a1 1 0 0 0 1-.8L20 8H6.1M9.5 21a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5zM17 21a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        Mi carrito
+        <span class="nav__conteo" id="conteo" aria-label="productos">0</span>
+      </a>
+    </nav>
+    <p class="menu-app__usuario" id="menu-usuario"></p>
+  </aside>
 
-  <main class="contenedor catalogo">
-    <section class="intro">
-      <h1>Personaliza y cotiza en minutos</h1>
-      <p>Elige un producto, cuéntanos tu idea y recibe tu cotización por WhatsApp.</p>
+  <main class="principal catalogo" id="catalogo">
+    <header class="principal__cabecera">
+      <div>
+        <h1>Catálogo</h1>
+        <p class="principal__subtitulo">Elige un producto, cuéntanos tu idea y recibe tu cotización por WhatsApp.</p>
+      </div>
+    </header>
+
+    <section class="como-funciona" aria-labelledby="como-titulo">
+      <h2 id="como-titulo">¿Cómo funciona?</h2>
+      <ol class="pasos">
+        <li class="paso"><strong>Elige tus productos</strong><span>Explora el catálogo y agrega los que necesites.</span></li>
+        <li class="paso"><strong>Personalízalos</strong><span>Color, cantidad, temática y tu propio diseño.</span></li>
+        <li class="paso"><strong>Recibe tu cotización</strong><span>Te llega un folio y la enviamos por WhatsApp.</span></li>
+      </ol>
     </section>
 
-    <div class="buscador">
-      <label for="buscar">Buscar producto</label>
-      <input id="buscar" type="search" placeholder="Ej. termo, stickers" autocomplete="off">
-    </div>
+    <section class="catalogo__productos" aria-labelledby="productos-titulo">
+      <h2 class="solo-lectores" id="productos-titulo">Productos</h2>
 
-    <nav aria-label="Categorías de productos">
-      <ul class="categorias" id="categorias"></ul>
-    </nav>
+      <div class="filtros-catalogo">
+        <nav aria-label="Categorías de productos">
+          <ul class="categorias" id="categorias"></ul>
+        </nav>
+        <div class="buscador">
+          <label for="buscar" class="solo-lectores">Buscar producto</label>
+          <input id="buscar" type="search" placeholder="Buscar producto, ej. termo" autocomplete="off">
+        </div>
+      </div>
 
-    <p class="solo-lectores" id="resultado" role="status" aria-live="polite"></p>
+      <p class="solo-lectores" id="resultado" role="status" aria-live="polite"></p>
 
-    <ul class="productos" id="productos"></ul>
+      <ul class="productos" id="productos"></ul>
 
-    <div class="vacio" id="vacio" hidden>
-      <p id="vacio-texto"></p>
-      <button class="chip" id="limpiar" type="button">Ver todos los productos</button>
-    </div>
+      <div class="vacio" id="vacio" hidden>
+        <p id="vacio-texto"></p>
+        <button class="chip" id="limpiar" type="button">Ver todos los productos</button>
+      </div>
+    </section>
   </main>
 
   <div class="barra-cotizacion" id="barra" hidden>
     <div class="contenedor">
-      <a class="btn" href="cotizacion.html">Ver mi cotización (<span id="barra-conteo">0 productos</span>)</a>
+      <a class="btn" href="cotizacion.html">Ver mi carrito (<span id="barra-conteo">0 productos</span>)</a>
     </div>
   </div>
 
@@ -57,5 +93,7 @@
   <script src="js/carrito.js"></script>
   <script src="js/vista-previa.js"></script>
   <script src="js/catalogo.js"></script>
+  <script src="js/cotizaciones.js"></script>
+  <script src="js/menu.js"></script>
 </body>
 </html>
