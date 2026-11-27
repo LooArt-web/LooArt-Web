@@ -94,7 +94,7 @@ Cualquier otro cambio se rechaza en el backend (RN-028). Cada transición se hac
 
 ## Diccionario de datos
 
-La base tiene 16 tablas y 2 vistas, con los nombres reales del esquema de David. Corresponde a la migración congelada `database/migrations/V001__esquema_inicial.sql`, que es la V2 probada por David en MySQL 8.0.46 más la tabla producto\_archivo; falta volver a ejecutar sus pruebas. Convenciones comunes:
+La base tiene 16 tablas y 2 vistas, con los nombres reales del esquema de David. Corresponde a la migración congelada `database/migrations/V001__esquema_inicial.sql`, que es la V2 probada por David en MySQL 8.0.46 más la tabla producto\_archivo; David la validó el 27-nov-2026 con los 22 errores esperados. Convenciones comunes:
 
 - Llaves primarias `BIGINT UNSIGNED AUTO_INCREMENT`; los catálogos pequeños usan `TINYINT`.
 - Los booleanos son `TINYINT(1)` (1 = sí, 0 = no).
@@ -351,7 +351,7 @@ Los 19 requisitos funcionales tienen caso de uso y soporte en datos; 3 dependen 
 | RNF-002 | Panel protegido con autenticación | usuarios.password\_hash, intentos\_fallidos, bloqueado\_hasta; roles | RN-031, RN-032 | Completa |
 | RNF-003 | Cotizaciones persistidas | Transacción de alta; InnoDB | RN-022 | Completa |
 | RNF-004 | Servidor disponible siempre | Depende del hosting elegido | — | PENDIENTE: hosting sin contratar |
-| RNF-005 | Validación en servidor | CHECK, NOT NULL, UK y FK como última barrera; 22 pruebas en tests/V001\_\_pruebas\_restricciones.sql | RN-014 | Completa (V2 probada en MySQL 8.0.46; falta repetir con V001) |
+| RNF-005 | Validación en servidor | CHECK, NOT NULL, UK y FK como última barrera; 22 pruebas en tests/V001\_\_pruebas\_restricciones.sql | RN-014 | Completa (V001 probada el 27-nov-2026: 22 errores esperados) |
 | RNF-006 | Respaldos y recuperación | Sin definir | — | PENDIENTE: política de respaldos |
 | RNF-007 | Límites y seguridad de archivos | archivos\_referencia y producto\_archivo: tipo\_mime, tamano\_bytes, ruta generada | RN-026, RN-033 | Completa (límites propuestos) |
 
@@ -366,4 +366,4 @@ Siete decisiones abiertas bloquean que este documento pase de preliminar a aprob
 - [ ] Equipo: decidir si un comprador que vuelve a cotizar reutiliza su registro de `cliente` o se crea uno nuevo.
 - [ ] Equipo: confirmar los límites de imagen de 5 MB por imagen (JPG, PNG o WebP) y 50 MB por modelo 3D (RN-026, RN-033, RNF-007).
 - [ ] Equipo: definir hosting y política de respaldos (RNF-004, RNF-006).
-- [x] David: ejecutar el script en MySQL 8.0.16 o superior y probar que cada CHECK rechaza datos inválidos. Hecho: las pruebas pasaron el 27-nov-2026.
+- [x] David: ejecutar el script en MySQL 8.0.16 o superior y probar que cada CHECK rechaza datos inválidos. Hecho: la V2 y la V001 pasaron las pruebas el 27-nov-2026 (22 errores esperados en la V001).
