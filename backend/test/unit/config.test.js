@@ -1,0 +1,96 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { leerConfig } from "../../src/config.js";
+
+const ENV_OK = Object.freeze({
+  NODE_ENV: "development",
+  PUERTO: "3000",
+  DB_HOST: "127.0.0.1",
+  DB_PUERTO: "3306",
+  DB_USUARIO: "looart_app",
+  DB_CLAVE: "clave-super-secreta-123",
+  DB_NOMBRE: "looart1",
+  ORIGENES_PERMITIDOS: "https://looart-web.pages.dev, http://localhost:5500",
+  ALMACEN: "disco"
+});
+
+test("leerConfig convierte tipos y separa los orígenes", () => {
+  const c = leerConfig({ ...ENV_OK });
+  assert.equal(c.puerto, 3000);
+  assert.equal(c.db.puerto, 3306);
+  assert.equal(c.db.nombre, "looart1");
+  assert.deepEqual(c.origenesPermitidos, ["https://looart-web.pages.dev", "http://localhost:5500"]);
+  assert.equal(c.almacen.tipo, "disco");
+  assert.ok(Object.isFrozen(c), "la configuración no se puede modificar en ejecución");
+});
+
+test("leerConfig ignora variables ajenas del sistema (PATH, HOME...)", () => {
+  const c = leerConfig({ ...ENV_OK, PATH: "/usr/bin", HOME: "/root" });
+  assert.equal(c.db.usuario, "looart_app");
+});
+
+test("si falta una variable, el error la nombra sin mostrar ningún valor", () => {
+  const env = { ...ENV_OK };
+  delete env.DB_CLAVE;
+  assert.throws(
+    () => leerConfig(env),
+    (e) => {
+      assert.match(e.message, /DB_CLAVE/);
+      for (const valor of Object.values(ENV_OK)) {
+        assert.ok(!e.message.includes(valor), `el mensaje filtró el valor ${valor}`);
+      }
+      return true;
+    }
+  );
+});
+
+test("un valor inválido tampoco aparece en el mensaje de error", () => {
+  assert.throws(
+    () => leerConfig({ ...ENV_OK, DB_PUERTO: "tres-mil-secreto" }),
+    (e) => /DB_PUERTO/.test(e.message) && !e.message.includes("tres-mil-secreto")
+  );
+});
+
+test("rechaza el comodín * en los orígenes permitidos", () => {
+  assert.throws(() => leerConfig({ ...ENV_OK, ORIGENES_PERMITIDOS: "*" }), /ORIGENES_PERMITIDOS/);
+  assert.throws(
+    () => leerConfig({ ...ENV_OK, ORIGENES_PERMITIDOS: "https://a.com,*" }),
+    /ORIGENES_PERMITIDOS/
+  );
+});
+
+test("rechaza orígenes que no son URL http(s) sin ruta", () => {
+  assert.throws(
+    () => leerConfig({ ...ENV_OK, ORIGENES_PERMITIDOS: "looart-web.pages.dev" }),
+    /ORIGENES_PERMITIDOS/
+  );
+  assert.throws(
+    () => leerConfig({ ...ENV_OK, ORIGENES_PERMITIDOS: "https://a.com/ruta" }),
+    /ORIGENES_PERMITIDOS/
+  );
+});
+
+test("ALMACEN=r2 exige las credenciales de R2", () => {
+  assert.throws(() => leerConfig({ ...ENV_OK, ALMACEN: "r2" }), /R2_BUCKET/);
+  const c = leerConfig({
+    ...ENV_OK,
+    ALMACEN: "r2",
+    R2_CUENTA: "cuenta",
+    R2_LLAVE: "llave",
+    R2_SECRETO: "secreto",
+    R2_BUCKET: "looart",
+    R2_URL_PUBLICA: "https://archivos.looart.mx"
+  });
+  assert.equal(c.almacen.tipo, "r2");
+  assert.equal(c.almacen.r2.bucket, "looart");
+});
+
+test("rechaza un tipo de almacenamiento desconocido", () => {
+  assert.throws(() => leerConfig({ ...ENV_OK, ALMACEN: "ftp" }), /ALMACEN/);
+});
+
+test("SECRETO_ORIGEN, si se define, debe tener al menos 32 caracteres", () => {
+  assert.throws(() => leerConfig({ ...ENV_OK, SECRETO_ORIGEN: "corto" }), /SECRETO_ORIGEN/);
+  const c = leerConfig({ ...ENV_OK, SECRETO_ORIGEN: "x".repeat(32) });
+  assert.equal(c.secretoOrigen.length, 32);
+});
