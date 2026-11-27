@@ -75,14 +75,16 @@
       </div>
 
       <div class="campo">
-        <label for="modelo">Tipo de producto <span class="opcional">(para la vista previa si aún no hay foto)</span></label>
-        <select id="modelo">
-          <option value="termo">Termo</option>
-          <option value="taza">Taza</option>
-          <option value="sticker">Sticker</option>
-          <option value="pin">Pin (botón)</option>
-          <option value="caja">Otro (caja)</option>
+        <label for="modelo">Tipo de vista previa</label>
+        <select id="modelo" aria-describedby="ayuda-modelo">
+          <option value="termo">Termo: cilindro 3D con tapa</option>
+          <option value="taza">Taza: cilindro 3D con asa</option>
+          <option value="pin">Pin: doble cara 3D, frente y reverso</option>
+          <option value="caja">Caja: prisma 3D</option>
+          <option value="sticker">Sticker: lámina 3D</option>
+          <option value="foto">Otro / foto libre: tu foto con inclinación 3D</option>
         </select>
+        <p class="ayuda" id="ayuda-modelo"></p>
       </div>
 
       <div class="doble">
@@ -126,6 +128,7 @@
         <p class="ayuda">Puedes subir un mockup con el frente y el reverso lado a lado, sobre fondo liso o de cuadritos: quitamos el fondo y armamos la vista que se voltea.</p>
         <input class="solo-lectores" id="foto" type="file" accept="image/*" aria-describedby="error-foto estado-foto">
         <label class="casilla"><input id="quitar-fondo" type="checkbox" checked> Quitar el fondo y separar frente y reverso</label>
+        <p class="aviso-admin" id="aviso-recorte" hidden></p>
 
         <img class="foto-vista" id="foto-vista" alt="Vista previa de la foto" hidden>
         <div class="piezas-foto" id="piezas-foto" hidden>

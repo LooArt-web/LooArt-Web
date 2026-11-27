@@ -5,7 +5,7 @@
    * nombre provisional ("Categoría 3", vacío…), se usa el de su tipo de
    * producto para no mostrar textos de relleno al cliente.
    */
-  var POR_MODELO = { termo: "Termos", taza: "Tazas", sticker: "Stickers", pin: "Pines", caja: "Cajas" };
+  var POR_MODELO = { termo: "Termos", taza: "Tazas", sticker: "Stickers", pin: "Pines", caja: "Cajas", foto: "Otros" };
   function categoriaReal(p) {
     var c = (p.categoria || "").trim();
     if (!c || /^(categor[ií]a|category)\s*\d*$/i.test(c) || /^\[.*\]$/.test(c)) {

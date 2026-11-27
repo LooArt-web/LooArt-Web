@@ -104,23 +104,52 @@ window.LooArt.recorte = (function () {
     var muestras = muestrasOrilla(px, W, H);
     var colores = dosColores(muestras);
     var A = colores[0], B = colores[1];
-    var TOL = 26;
+    /*
+     * Tolerancia según qué tan "limpio" es el fondo: en un cuadriculado
+     * dibujado los tonos son exactos y basta muy poco margen (así no se confunde
+     * con un objeto gris claro); en una foto con ruido se necesita más.
+     */
+    var desvios = muestras.map(function (m) { return Math.min(distColores(m.c, A), distColores(m.c, B)); })
+      .sort(function (x, y) { return x - y; });
+    var p80 = desvios[Math.floor(desvios.length * 0.8)] || 0;
+    var TOL = Math.max(10, Math.min(28, p80 * 3 + 7));
 
     var esCuadricula = distColores(A, B) > 10;
     var info = null;
     if (esCuadricula) {
-      /* Etiqueta de cada pixel de la fila 1 y la columna 1: ¿más cerca de A o de B? */
-      var fila = [], col = [];
-      for (var x = 0; x < W; x++) fila.push(dist(px, (1 * W + x) * 4, A) <= dist(px, (1 * W + x) * 4, B) ? 0 : 1);
-      for (var y = 0; y < H; y++) col.push(dist(px, (y * W + 1) * 4, A) <= dist(px, (y * W + 1) * 4, B) ? 0 : 1);
-      var px1 = periodo(fila), py1 = periodo(col);
-      if (px1 && py1 && Math.abs(px1.c - py1.c) <= 1.5) {
+      /*
+       * Tamaño de cuadro medido en varias filas y columnas cerca de las orillas
+       * (la primera fila de algunas imágenes viene alterada); se usa la mediana.
+       */
+      function etiquetasFila(y) {
+        var e = [];
+        for (var x = 0; x < W; x++) { var i = (y * W + x) * 4; e.push(dist(px, i, A) <= dist(px, i, B) ? 0 : 1); }
+        return e;
+      }
+      function etiquetasCol(x) {
+        var e = [];
+        for (var y = 0; y < H; y++) { var i = (y * W + x) * 4; e.push(dist(px, i, A) <= dist(px, i, B) ? 0 : 1); }
+        return e;
+      }
+      function mejor(lista) {
+        var validos = lista.filter(Boolean).sort(function (a, b) { return a.c - b.c; });
+        if (!validos.length) return null;
+        var med = validos[Math.floor(validos.length / 2)];
+        return med;
+      }
+      var lineas = [2, 4, 6, 9];
+      var px1 = mejor(lineas.map(function (y) { return periodo(etiquetasFila(y)); })
+        .concat(lineas.map(function (y) { return periodo(etiquetasFila(H - 1 - y)); })));
+      var py1 = mejor(lineas.map(function (x) { return periodo(etiquetasCol(x)); })
+        .concat(lineas.map(function (x) { return periodo(etiquetasCol(W - 1 - x)); })));
+      /* Ancho y alto del cuadro por separado: algunos mockups lo estiran un poco */
+      if (px1 && py1 && Math.abs(px1.c - py1.c) <= Math.max(px1.c, py1.c) * 0.15) {
         var c = (px1.c + py1.c) / 2;
-        info = { c: c, ox: px1.desfase, oy: py1.desfase };
+        info = { c: c, cx: px1.c, cy: py1.c, ox: px1.desfase, oy: py1.desfase };
         /* ¿Qué color va en los cuadros "pares"? Se decide por mayoría en la orilla */
         var votos = 0;
         muestras.forEach(function (s) {
-          var par = ((Math.floor((s.x - info.ox) / c + 1) + Math.floor((s.y - info.oy) / c + 1)) & 1) === 0;
+          var par = ((Math.floor((s.x - info.ox) / info.cx + 1) + Math.floor((s.y - info.oy) / info.cy + 1)) & 1) === 0;
           var esA = distColores(s.c, A) <= distColores(s.c, B);
           votos += par === esA ? 1 : -1;
         });
@@ -131,9 +160,9 @@ window.LooArt.recorte = (function () {
       }
     }
 
-    if (info) { cuadricula(px, W, H, fondo, info, A, B, TOL); return info.c; }
+    if (info) { return { cuadro: info.c, seguro: cuadricula(px, W, H, fondo, info, A, B, TOL) }; }
     liso(px, W, H, fondo, esCuadricula ? [A, B] : [[(A[0] + B[0]) / 2, (A[1] + B[1]) / 2, (A[2] + B[2]) / 2]], TOL + 4);
-    return 0;
+    return { cuadro: 0, seguro: null };
   }
 
   /*
@@ -169,14 +198,39 @@ window.LooArt.recorte = (function () {
     return d; /* en tercios de pixel */
   }
   /* Rellena muescas más angostas que 2r (pedazos de orilla que se confundieron con fondo) */
-  function cerrar(fondo, W, H, r) {
+  function cerrar(fondo, W, H, r, seguro) {
     var objeto = new Uint8Array(W * H);
     for (var i = 0; i < W * H; i++) objeto[i] = fondo[i] ? 0 : 1;
     var aObjeto = distancias(objeto, W, H, 0);
     var crecido = new Uint8Array(W * H);
     for (var j = 0; j < W * H; j++) crecido[j] = aObjeto[j] <= r * 3 ? 1 : 0;
     var aFuera = distancias(crecido, W, H, 1);
-    for (var t = 0; t < W * H; t++) if (!objeto[t] && aFuera[t] > r * 3) fondo[t] = 0;
+    /* Lo que es fondo con seguridad (cuadros completos) no se rellena */
+    for (var t = 0; t < W * H; t++) if (!objeto[t] && aFuera[t] > r * 3 && !(seguro && seguro[t])) fondo[t] = 0;
+  }
+
+  /*
+   * Suaviza el contorno: promedio en una ventana de (2r+1)² y umbral a la mitad.
+   * Borra ondas y picos menores que r sin cerrar huecos más anchos que 2r.
+   * Lo marcado como fondo seguro se respeta.
+   */
+  function suavizar(fondo, W, H, r, seguro) {
+    var suma = new Float64Array((W + 1) * (H + 1));
+    for (var y = 0; y < H; y++) {
+      var fila = 0;
+      for (var x = 0; x < W; x++) {
+        fila += fondo[y * W + x] ? 0 : 1;
+        suma[(y + 1) * (W + 1) + x + 1] = suma[y * (W + 1) + x + 1] + fila;
+      }
+    }
+    var nuevo = new Uint8Array(W * H);
+    for (var y2 = 0; y2 < H; y2++) for (var x2 = 0; x2 < W; x2++) {
+      var xa = Math.max(0, x2 - r), xb = Math.min(W, x2 + r + 1), ya = Math.max(0, y2 - r), yb = Math.min(H, y2 + r + 1);
+      var area = (xb - xa) * (yb - ya);
+      var objeto = suma[yb * (W + 1) + xb] - suma[ya * (W + 1) + xb] - suma[yb * (W + 1) + xa] + suma[ya * (W + 1) + xa];
+      nuevo[y2 * W + x2] = objeto / area < 0.5 || (seguro && seguro[y2 * W + x2]) ? 1 : 0;
+    }
+    fondo.set(nuevo);
   }
 
   function abrir(fondo, W, H, r) {
@@ -196,7 +250,8 @@ window.LooArt.recorte = (function () {
     var cola = new Int32Array(W * H), ini = 0, fin = 0;
     function parecido(i) {
       for (var k = 0; k < colores.length; k++) if (dist(px, i * 4, colores[k]) < tol) return true;
-      return false;
+      /* Con dos tonos (cuadriculado irregular), también sus mezclas en las líneas */
+      return colores.length === 2 && distMezcla(px, i * 4, colores[0], colores[1]) < tol * 0.5;
     }
     function sembrar(i) { if (!fondo[i] && parecido(i)) { fondo[i] = 1; cola[fin++] = i; } }
     for (var x = 0; x < W; x++) { sembrar(x); sembrar((H - 1) * W + x); }
@@ -217,11 +272,13 @@ window.LooArt.recorte = (function () {
    * objeto, se quitan solo los pixeles que coinciden con el color esperado.
    */
   function cuadricula(px, W, H, fondo, info, A, B, tol) {
-    var c = info.c;
-    function celdaX(x) { return Math.floor((x - info.ox) / c + 1); }
-    function celdaY(y) { return Math.floor((y - info.oy) / c + 1); }
+    var c = info.c, anchoC = info.cx, altoC = info.cy;
+    function celdaX(x) { return Math.floor((x - info.ox) / anchoC + 1); }
+    function celdaY(y) { return Math.floor((y - info.oy) / altoC + 1); }
     /* Distancia (en pixeles) del punto al borde de su cuadro */
-    function resto(v, o) { var f = (v - o) / c + 1; return (f - Math.floor(f)) * c; }
+    function resto(v, o, t) { var f = (v - o) / t + 1; return (f - Math.floor(f)) * t; }
+    function restoX(x) { return resto(x, info.ox, anchoC); }
+    function restoY(y) { return resto(y, info.oy, altoC); }
     var NX = celdaX(W - 1) + 1, NY = celdaY(H - 1) + 1;
     function esperado(cx, cy) { return ((cx + cy) & 1) === 0 ? info.par : info.impar; }
 
@@ -229,12 +286,12 @@ window.LooArt.recorte = (function () {
     var margen = c >= 6 ? 1.5 : 0;
     for (var y = 0; y < H; y++) {
       var cy = celdaY(y);
-      var ry0 = resto(y, info.oy);
-      var dentroY = ry0 >= margen && ry0 < c - margen;
+      var ry0 = restoY(y);
+      var dentroY = ry0 >= margen && ry0 < altoC - margen;
       for (var x = 0; x < W; x++) {
         var cx = celdaX(x);
-        var rx0 = resto(x, info.ox);
-        var dentroX = rx0 >= margen && rx0 < c - margen;
+        var rx0 = restoX(x);
+        var dentroX = rx0 >= margen && rx0 < anchoC - margen;
         if (!dentroX || !dentroY) continue;
         var k = cy * NX + cx;
         total[k]++;
@@ -259,18 +316,41 @@ window.LooArt.recorte = (function () {
       sembrarCelda(ccx - 1, ccy); sembrarCelda(ccx + 1, ccy); sembrarCelda(ccx, ccy - 1); sembrarCelda(ccx, ccy + 1);
     }
 
+    /*
+     * Huecos encerrados (entre un asa y el cuerpo, dentro de una argolla):
+     * un pixel es fondo si coincide con su tono esperado y también coinciden
+     * los puntos equivalentes de al menos dos cuadros vecinos (del otro tono).
+     * Un objeto no puede coincidir con los dos tonos a la vez; el fondo sí.
+     */
+    function coincide(x, y) {
+      if (x < 0 || y < 0 || x >= W || y >= H) return false;
+      return dist(px, (y * W + x) * 4, esperado(celdaX(x), celdaY(y))) < tol;
+    }
+    function fondoEncerrado(x, y) {
+      if (!coincide(x, y)) return false;
+      var rx = restoX(x), ry = restoY(y), n = 0;
+      if (coincide(x + Math.ceil(anchoC - rx) + 1, y)) n++;
+      if (coincide(x - Math.ceil(rx) - 2, y)) n++;
+      if (coincide(x, y + Math.ceil(altoC - ry) + 1)) n++;
+      if (coincide(x, y - Math.ceil(ry) - 2)) n++;
+      return n >= 2;
+    }
+
     /* Pixeles: cuadros de fondo completos y, junto a ellos, lo que coincide con el patrón */
     var orilla = new Uint8Array(W * H);
+    var seguro = new Uint8Array(W * H);
     for (var y2 = 0; y2 < H; y2++) {
       var cy2 = celdaY(y2);
       for (var x2 = 0; x2 < W; x2++) {
         var cx2 = celdaX(x2), i = y2 * W + x2;
-        if (celdaFondo[cy2 * NX + cx2]) { fondo[i] = 1; continue; }
-        var vecino = (cx2 > 0 && celdaFondo[cy2 * NX + cx2 - 1]) || (cx2 < NX - 1 && celdaFondo[cy2 * NX + cx2 + 1]) ||
-          (cy2 > 0 && celdaFondo[(cy2 - 1) * NX + cx2]) || (cy2 < NY - 1 && celdaFondo[(cy2 + 1) * NX + cx2]);
+        var kc = cy2 * NX + cx2;
+        if (celdaFondo[kc]) { fondo[i] = 1; seguro[i] = 1; continue; }
+        if (fondoEncerrado(x2, y2)) { fondo[i] = 1; seguro[i] = 1; continue; }
+        var vecino = (cx2 > 0 && celdaFondo[kc - 1]) || (cx2 < NX - 1 && celdaFondo[kc + 1]) ||
+          (cy2 > 0 && celdaFondo[kc - NX]) || (cy2 < NY - 1 && celdaFondo[kc + NX]);
         if (!vecino) continue;
-        var rx = resto(x2, info.ox), ry = resto(y2, info.oy);
-        var enLinea = rx < 1.5 || ry < 1.5 || rx > c - 1.5 || ry > c - 1.5;
+        var rx = restoX(x2), ry = restoY(y2);
+        var enLinea = rx < 1.5 || ry < 1.5 || rx > anchoC - 1.5 || ry > altoC - 1.5;
         /* En las líneas entre cuadros se aceptan mezclas reales de los dos tonos,
            no colores casi iguales a uno de ellos (así no se cuela a un borde blanco) */
         var mezcla = enLinea && distMezcla(px, i * 4, A, B) < tol * 0.6 &&
@@ -291,6 +371,18 @@ window.LooArt.recorte = (function () {
       }
     }
 
+    /* Líneas de la cuadrícula que quedaron dentro de un hueco ya quitado */
+    for (var pasada = 0; pasada < 2; pasada++) {
+      for (var y4 = 2; y4 < H - 2; y4++) for (var x4 = 2; x4 < W - 2; x4++) {
+        var i4 = y4 * W + x4;
+        if (fondo[i4]) continue;
+        if (distMezcla(px, i4 * 4, A, B) > tol * 0.8) continue;
+        var horiz = (seguro[i4 - 1] || seguro[i4 - 2]) && (seguro[i4 + 1] || seguro[i4 + 2]);
+        var vert = (seguro[i4 - W] || seguro[i4 - 2 * W]) && (seguro[i4 + W] || seguro[i4 + 2 * W]);
+        if (horiz || vert) { fondo[i4] = 1; seguro[i4] = 1; }
+      }
+    }
+
     /*
      * Sombras sobre la cuadrícula: una sombra oscurece por igual el cuadro claro
      * y el oscuro, así que la proporción (pixel / color esperado) casi no cambia
@@ -307,16 +399,24 @@ window.LooArt.recorte = (function () {
       if (!gris(i)) return false;
       var k = proporcion(i, x, y);
       if (k > 0.985 || k < 0.12) return false;
-      var rx = resto(x, info.ox), ry = resto(y, info.oy);
+      var rx = restoX(x), ry = restoY(y);
       /* Un punto equivalente en cada cuadro vecino */
-      var otros = [[x + Math.ceil(c - rx) + 1, y], [x - Math.ceil(rx) - 2, y], [x, y + Math.ceil(c - ry) + 1], [x, y - Math.ceil(ry) - 2]];
+      var otros = [[x + Math.ceil(anchoC - rx) + 1, y], [x - Math.ceil(rx) - 2, y], [x, y + Math.ceil(altoC - ry) + 1], [x, y - Math.ceil(ry) - 2]];
+      /*
+       * Una sombra real se ve igual en un cuadro vecino que también está
+       * sombreado. La orilla de un objeto gris junto al fondo solo "coincide"
+       * con el fondo limpio de afuera, y eso no cuenta.
+       */
+      var parejos = 0;
       for (var t = 0; t < 4; t++) {
         var ox2 = otros[t][0], oy2 = otros[t][1];
         if (ox2 < 0 || oy2 < 0 || ox2 >= W || oy2 >= H) continue;
         var o = oy2 * W + ox2;
         if (!gris(o)) continue;
-        if (Math.abs(proporcion(o, ox2, oy2) - k) < 0.07) return true;
+        var ko = proporcion(o, ox2, oy2);
+        if (ko < 0.985 && Math.abs(ko - k) < 0.12) parejos++;
       }
+      if (parejos >= 2) return true;
       return false;
     }
     ini = 0; fin = 0;
@@ -332,6 +432,7 @@ window.LooArt.recorte = (function () {
         fondo[n2] = 1; q[fin++] = n2;
       }
     }
+    return seguro;
   }
 
   /* ---------- 2. Piezas ---------- */
@@ -357,6 +458,54 @@ window.LooArt.recorte = (function () {
     return { etiqueta: etiqueta, piezas: piezas };
   }
 
+  /*
+   * Une las partes de un mismo objeto que quedaron separadas (la tapa y el
+   * cuerpo de un termo, un asa…): piezas cuyas cajas están a menos de 4 % del
+   * tamaño de la imagen. Reescribe las etiquetas para que cada grupo tenga una.
+   * Devuelve los grupos ordenados de mayor a menor.
+   */
+  function agrupar(r, W, H) {
+    var minimo = W * H * 0.0015;
+    var piezas = r.piezas.filter(function (p) { return p.area >= minimo; });
+    var cerca = Math.max(W, H) * 0.04;
+    var padre = {};
+    piezas.forEach(function (p) { padre[p.id] = p.id; });
+    function raiz(id) { while (padre[id] !== id) id = padre[id] = padre[padre[id]]; return id; }
+    function separacion(a, b) {
+      var dx = Math.max(0, Math.max(a.x0, b.x0) - Math.min(a.x1, b.x1));
+      var dy = Math.max(0, Math.max(a.y0, b.y0) - Math.min(a.y1, b.y1));
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    /* Se repite hasta que no haya más uniones (las cajas crecen al unir) */
+    var cambio = true, cajas = {};
+    piezas.forEach(function (p) { cajas[p.id] = { x0: p.x0, y0: p.y0, x1: p.x1, y1: p.y1 }; });
+    while (cambio) {
+      cambio = false;
+      for (var i = 0; i < piezas.length; i++) for (var j = i + 1; j < piezas.length; j++) {
+        var ra = raiz(piezas[i].id), rb = raiz(piezas[j].id);
+        if (ra === rb || separacion(cajas[ra], cajas[rb]) > cerca) continue;
+        padre[rb] = ra;
+        var a = cajas[ra], b = cajas[rb];
+        cajas[ra] = { x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1) };
+        cambio = true;
+      }
+    }
+    var grupos = {};
+    piezas.forEach(function (p) {
+      var k = raiz(p.id), g = grupos[k];
+      if (!g) g = grupos[k] = { id: k, area: 0, x0: W, y0: H, x1: 0, y1: 0, sx: 0, sy: 0 };
+      g.area += p.area; g.sx += p.sx; g.sy += p.sy;
+      g.x0 = Math.min(g.x0, p.x0); g.y0 = Math.min(g.y0, p.y0); g.x1 = Math.max(g.x1, p.x1); g.y1 = Math.max(g.y1, p.y1);
+    });
+    /* Etiquetas: cada pixel toma la del grupo; las piezas sueltas muy chicas se descartan */
+    var mapa = new Int32Array(r.piezas.length + 2);
+    piezas.forEach(function (p) { mapa[p.id] = raiz(p.id); });
+    for (var t = 0; t < W * H; t++) if (r.etiqueta[t]) r.etiqueta[t] = mapa[r.etiqueta[t]];
+    return Object.keys(grupos).map(function (k) { return grupos[k]; })
+      .filter(function (g) { return g.area >= W * H * AREA_MINIMA; })
+      .sort(function (a, b) { return b.area - a.area; });
+  }
+
   /* Zona imprimible: la cara lisa que rodea el centro de la pieza */
   function zonaImprimible(px, W, etiqueta, pz) {
     var w = pz.x1 - pz.x0 + 1, h = pz.y1 - pz.y0 + 1;
@@ -371,7 +520,19 @@ window.LooArt.recorte = (function () {
     }
     if (!n) return null;
     ref = [ref[0] / n, ref[1] / n, ref[2] / n];
-    var TOL = 46, cola = [], s0 = (cy - pz.y0) * w + (cx - pz.x0);
+    /*
+     * Parecido de color pesando sobre todo el tono y poco la luz: los brillos y
+     * sombras de una cara lisa (un termo con reflejo) siguen siendo la misma cara,
+     * pero la tapa o un asa de otro tono no.
+     */
+    var refLum = lum(ref), refC = [ref[0] - ref[1], ref[1] - ref[2]];
+    function lejos(g) {
+      var r0 = px[g * 4], g0 = px[g * 4 + 1], b0 = px[g * 4 + 2];
+      var dc0 = (r0 - g0) - refC[0], dc1 = (g0 - b0) - refC[1];
+      var dl = (0.299 * r0 + 0.587 * g0 + 0.114 * b0 - refLum) * 0.35;
+      return Math.sqrt(dc0 * dc0 + dc1 * dc1 + dl * dl);
+    }
+    var TOL = 22, cola = [], s0 = (cy - pz.y0) * w + (cx - pz.x0);
     zona[s0] = 1; cola.push(s0);
     var area = 0;
     while (cola.length) {
@@ -382,7 +543,7 @@ window.LooArt.recorte = (function () {
         var li = v[1] * w + v[0];
         if (zona[li]) return;
         var g = (v[1] + pz.y0) * W + (v[0] + pz.x0);
-        if (etiqueta[g] !== pz.id || dist(px, g * 4, ref) > TOL) return;
+        if (etiqueta[g] !== pz.id || lejos(g) > TOL) return;
         zona[li] = 1; cola.push(li);
       });
     }
@@ -398,6 +559,14 @@ window.LooArt.recorte = (function () {
       if (yk > 0) marcar(xk, yk - 1); if (yk < h - 1) marcar(xk, yk + 1);
     }
     for (var t = 0; t < w * h; t++) if (!fuera[t]) zona[t] = 1;
+    /* Cada fila se rellena de lado a lado (franjas de brillo verticales), sin salir del objeto */
+    for (var fy = 0; fy < h; fy++) {
+      var izq = -1, der = -1;
+      for (var fx = 0; fx < w; fx++) if (zona[fy * w + fx]) { if (izq < 0) izq = fx; der = fx; }
+      for (var fx2 = izq; izq >= 0 && fx2 <= der; fx2++) {
+        if (etiqueta[(fy + pz.y0) * W + fx2 + pz.x0] === pz.id) zona[fy * w + fx2] = 1;
+      }
+    }
     /* Recorta 2 px de la orilla para no pintar sobre el canto */
     for (var pasada = 0; pasada < 2; pasada++) {
       var copia = zona.slice();
@@ -572,8 +741,15 @@ window.LooArt.recorte = (function () {
     return resultado;
   }
 
+  /* Acepta un archivo o una imagen ya guardada (data URL) */
   function procesar(archivo) {
-    return cargar(archivo).then(function (img) {
+    var carga = typeof archivo === "string" ? new Promise(function (ok, mal) {
+      var im = new Image();
+      im.onload = function () { ok(im); };
+      im.onerror = function () { mal(new Error("imagen")); };
+      im.src = archivo;
+    }) : cargar(archivo);
+    return carga.then(function (img) {
       var escala = Math.min(1, MAX_PROCESO / Math.max(img.width, img.height));
       var W = Math.max(1, Math.round(img.width * escala)), H = Math.max(1, Math.round(img.height * escala));
       var lienzo = document.createElement("canvas");
@@ -590,19 +766,31 @@ window.LooArt.recorte = (function () {
       if (alfaOriginal) {
         for (var j = 0; j < W * H; j++) if (px[j * 4 + 3] < 20) fondo[j] = 1;
       } else {
-        var cuadro = quitarFondo(px, W, H, fondo);
-        if (cuadro) {
-          abrir(fondo, W, H, Math.ceil(cuadro * 0.6));
-          cerrar(fondo, W, H, Math.ceil(cuadro * 0.8));
+        var rf = quitarFondo(px, W, H, fondo);
+        if (rf.cuadro) {
+          abrir(fondo, W, H, Math.ceil(rf.cuadro * 0.6));
+          cerrar(fondo, W, H, Math.ceil(rf.cuadro * 0.8), rf.seguro);
+          suavizar(fondo, W, H, Math.max(2, Math.round(rf.cuadro * 0.35)), rf.seguro);
         }
       }
 
       var r = etiquetar(fondo, W, H);
-      var grandes = r.piezas
-        .filter(function (p) { return p.area >= W * H * AREA_MINIMA; })
-        .sort(function (a, b) { return b.area - a.area; })
-        .slice(0, 2);
-      if (!grandes.length) throw new Error("sin-piezas");
+      var grupos = agrupar(r, W, H);
+      if (!grupos.length) throw new Error("sin-piezas");
+
+      /*
+       * Frente y reverso solo si hay dos objetos separados y de tamaño parecido
+       * (como un mockup con las dos caras lado a lado). Si no, es un solo
+       * objeto: se usa el grupo más grande completo (cuerpo, tapa, asa…).
+       */
+      var grandes = [grupos[0]];
+      if (grupos.length > 1) {
+        var g0 = grupos[0], g1 = grupos[1];
+        var parecidos = g1.area / g0.area >= 0.45 &&
+          Math.min(g0.y1 - g0.y0, g1.y1 - g1.y0) / Math.max(g0.y1 - g0.y0, g1.y1 - g1.y0) >= 0.6 &&
+          Math.min(g0.x1 - g0.x0, g1.x1 - g1.x0) / Math.max(g0.x1 - g0.x0, g1.x1 - g1.x0) >= 0.6;
+        if (parecidos) grandes.push(g1);
+      }
 
       /* Orden de lectura: lado a lado o una arriba de otra */
       if (grandes.length === 2) {
@@ -614,7 +802,12 @@ window.LooArt.recorte = (function () {
       var piezas = grandes.map(function (p) { return exportar(px, W, H, alfaOriginal, r.etiqueta, p, true); });
       /* La cara más lisa suele ser el frente en blanco donde va el diseño */
       var frente = piezas[0], reverso = piezas[1] || null;
-      if (reverso && reverso.variacion < frente.variacion) { var t = frente; frente = reverso; reverso = t; }
+      /*
+       * Si una cara es claramente más lisa (el frente en blanco de un pin frente
+       * a su reverso metálico), esa es el frente. Si se parecen (frente y espalda
+       * de una playera), se respeta el orden del mockup: la primera es el frente.
+       */
+      if (reverso && reverso.variacion < frente.variacion * 0.75) { var t = frente; frente = reverso; reverso = t; }
       return { frente: frente, reverso: reverso, piezas: piezas.length };
     });
   }

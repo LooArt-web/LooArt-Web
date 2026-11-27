@@ -35,9 +35,17 @@
   $("ayuda-cantidad").textContent = "Mínimo " + piezas(producto.minimo);
 
   /* Vista previa: foto real o maqueta que cambia con lo que elige el cliente */
-  var vista = datos.vistaPrevia.crear(producto, $("foto"));
+  /* El cliente puede arrastrar su diseño sobre la vista previa (posición libre) */
+  var vista = datos.vistaPrevia.crear(producto, $("foto"), { alMover: moverDiseno });
   /* Copia junto a los controles de colocación (solo visible en celular) */
-  var vistaColocacion = datos.vistaPrevia.crear(producto, $("vista-colocacion"), { teclado: false });
+  var vistaColocacion = datos.vistaPrevia.crear(producto, $("vista-colocacion"), { teclado: false, alMover: moverDiseno });
+
+  /* Al arrastrar el diseño en la vista previa se actualizan los controles */
+  function moverDiseno(pos) {
+    $("posx").value = Math.round(pos.posX * 100);
+    $("posy").value = Math.round(pos.posY * 100);
+    actualizarVista();
+  }
 
   /* ---------- Opciones tipo chip ---------- */
   function pintarOpciones(contenedorId, nombre, valores, seleccionado, hexDe) {
@@ -167,14 +175,54 @@
       modo: valorElegido("colocacion") || "centro",
       tamano: Number($("tamano").value) / 100,
       separacion: Number($("separacion").value) / 100,
-      intercalado: $("intercalado").checked
+      intercalado: $("intercalado").checked,
+      angulo: Number($("angulo").value),
+      escala: Number($("escala").value) / 100,
+      posX: Number($("posx").value) / 100,
+      posY: Number($("posy").value) / 100,
+      cara: conReverso ? valorElegido("lado") || "frente" : "frente"
     });
   }
 
+  /* Playeras, sudaderas, cajas… con frente y reverso: el cliente elige el lado */
+  var conReverso = VP.reversoImprimible(producto);
+
+  function textoPos(v, menor, mayor) {
+    return v < 0.38 ? menor : v > 0.62 ? mayor : "Centro";
+  }
+
+  /* Termos y tazas en 3D: el diseño se puede mover alrededor del cuerpo */
+  var gira3d = (producto.modelo === "termo" || producto.modelo === "taza") &&
+    !!(window.LooArt.visor3d && window.LooArt.visor3d.disponible());
+
   function pintarColocacion() {
     var d = disenoActual();
-    $("g-colocacion").hidden = !imagen;
-    $("ajustes-repetida").hidden = d.modo !== "repetida";
+    var hayTexto = !!$("texto").value.trim();
+    /* Con imagen se elige cómo colocarla; con solo texto, su posición y tamaño */
+    $("g-colocacion").hidden = !imagen && !hayTexto;
+    $("op-colocacion").hidden = !imagen;
+    $("titulo-colocacion").textContent = imagen ? "Cómo se coloca tu imagen" : "Posición y tamaño del texto";
+    $("ayuda-colocacion").hidden = !imagen;
+    $("ajustes-repetida").hidden = !imagen || d.modo !== "repetida";
+    $("ajustes-centro").hidden = imagen ? d.modo !== "centro" : false;
+    $("ajuste-angulo").hidden = !gira3d;
+    /* En termos y tazas lo horizontal se mueve con "Posición alrededor del producto" */
+    $("ajuste-posx").hidden = gira3d;
+    $("g-lado").hidden = !conReverso || (!imagen && !hayTexto);
+    $("pista-arrastre").hidden = !vista.arrastrable;
+    $("valor-posx").textContent = textoPos(d.posX, "Izquierda", "Derecha") + " · " + Math.round(d.posX * 100) + " %";
+    $("valor-posy").textContent = textoPos(d.posY, "Arriba", "Abajo") + " · " + Math.round(d.posY * 100) + " %";
+    $("posx").setAttribute("aria-valuetext", $("valor-posx").textContent);
+    $("posy").setAttribute("aria-valuetext", $("valor-posy").textContent);
+    [].slice.call(document.querySelectorAll(".posicion")).forEach(function (b) {
+      var activo = Math.abs(Number(b.dataset.x) / 100 - d.posX) < 0.03 && Math.abs(Number(b.dataset.y) / 100 - d.posY) < 0.03;
+      b.setAttribute("aria-pressed", activo ? "true" : "false");
+    });
+    $("valor-angulo").textContent = Math.abs(d.angulo) < 5 ? "Al frente"
+      : Math.round(Math.abs(d.angulo)) + "° a la " + (d.angulo > 0 ? "derecha" : "izquierda");
+    $("valor-escala").textContent = Math.round(d.escala * 100) + " %";
+    $("angulo").setAttribute("aria-valuetext", $("valor-angulo").textContent);
+    $("escala").setAttribute("aria-valuetext", $("valor-escala").textContent);
     $("ayuda-colocacion").textContent = AYUDA_COLOCACION[d.modo];
     $("valor-tamano").textContent = d.tamano < 0.34 ? "Chicas" : d.tamano < 0.67 ? "Medianas" : "Grandes";
     $("valor-separacion").textContent = d.separacion < 0.12 ? "Mínima" : d.separacion < 0.32 ? "Media" : "Amplia";
@@ -190,7 +238,22 @@
     $("tamano").value = Math.round(dPrevio.tamano * 100);
     $("separacion").value = Math.round(dPrevio.separacion * 100);
     $("intercalado").checked = dPrevio.intercalado;
+    $("angulo").value = Math.round(dPrevio.angulo);
+    $("escala").value = Math.round(dPrevio.escala * 100);
+    $("posx").value = Math.round(dPrevio.posX * 100);
+    $("posy").value = Math.round(dPrevio.posY * 100);
+    var radioLado = document.querySelector('input[name="lado"][value="' + dPrevio.cara + '"]');
+    if (radioLado) radioLado.checked = true;
   }
+
+  /* Posiciones rápidas */
+  [].slice.call(document.querySelectorAll(".posicion")).forEach(function (b) {
+    b.addEventListener("click", function () {
+      $("posx").value = b.dataset.x;
+      $("posy").value = b.dataset.y;
+      actualizarVista();
+    });
+  });
 
   /* ---------- Vista previa en vivo ---------- */
   function actualizarVista() {
@@ -203,7 +266,7 @@
       arte: imagen && imagen.data ? imagen.data : null,
       tematica: tematica === LIBRE ? $("tematica-libre").value.trim() : tematica,
       texto: $("texto").value.trim(),
-      diseno: imagen ? disenoActual() : null
+      diseno: imagen || $("texto").value.trim() ? disenoActual() : null
     };
     vista.actualizar(estadoVista);
     vistaColocacion.actualizar(estadoVista);
@@ -326,7 +389,7 @@
       descripcion: $("descripcion").value.trim(),
       imagen: imagen,
       /* Cómo se coloca la imagen; viaja al carrito, al folio y al panel */
-      diseno: imagen ? disenoActual() : null
+      diseno: imagen || $("texto").value.trim() ? disenoActual() : null
     };
 
     var items = carrito.leer();

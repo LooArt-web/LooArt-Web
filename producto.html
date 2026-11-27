@@ -109,15 +109,58 @@
 
           <!-- Solo aparece cuando hay imagen: cómo se coloca en el producto -->
           <fieldset class="campo colocacion" id="g-colocacion" hidden>
-            <legend>Cómo se coloca tu imagen</legend>
+            <legend id="titulo-colocacion">Cómo se coloca tu imagen</legend>
             <!-- En celular la vista previa principal queda arriba: esta copia muestra el cambio junto a los controles -->
             <div class="colocacion__vista" id="vista-colocacion" aria-hidden="true"></div>
-            <div class="opciones" id="op-colocacion">
+            <div class="opciones" id="op-colocacion" role="radiogroup" aria-label="Cómo se coloca tu imagen">
               <label class="opcion"><input type="radio" name="colocacion" value="centro" checked><span>Al centro</span></label>
               <label class="opcion"><input type="radio" name="colocacion" value="repetida"><span>Repetida</span></label>
               <label class="opcion"><input type="radio" name="colocacion" value="envolvente"><span>Envolvente</span></label>
             </div>
             <p class="ayuda" id="ayuda-colocacion"></p>
+
+            <!-- Solo en productos con frente y reverso imprimibles (playeras, sudaderas, cajas…) -->
+            <div class="lado-diseno" id="g-lado" hidden>
+              <span class="etiqueta-mini" id="titulo-lado">¿En qué lado va tu diseño?</span>
+              <div class="opciones" role="radiogroup" aria-labelledby="titulo-lado">
+                <label class="opcion"><input type="radio" name="lado" value="frente" checked><span>Frente</span></label>
+                <label class="opcion"><input type="radio" name="lado" value="reverso"><span>Reverso</span></label>
+                <label class="opcion"><input type="radio" name="lado" value="ambos"><span>Ambos lados</span></label>
+              </div>
+            </div>
+
+            <div class="ajustes" id="ajustes-centro" hidden>
+              <p class="ajustes__pista" id="pista-arrastre" hidden>
+                <span aria-hidden="true">✥</span> Arrastra tu diseño sobre la vista previa para colocarlo donde quieras.
+              </p>
+              <div class="posiciones" id="posiciones" role="group" aria-label="Posiciones rápidas del diseño">
+                <button class="posicion" type="button" data-x="25" data-y="22">Arriba izq.</button>
+                <button class="posicion" type="button" data-x="50" data-y="20">Arriba</button>
+                <button class="posicion" type="button" data-x="75" data-y="22">Arriba der.</button>
+                <button class="posicion" type="button" data-x="50" data-y="50">Centro</button>
+                <button class="posicion" type="button" data-x="50" data-y="80">Abajo</button>
+              </div>
+              <div class="ajuste" id="ajuste-posx">
+                <label for="posx">Posición horizontal</label>
+                <input id="posx" type="range" min="0" max="100" step="1" value="50" aria-describedby="valor-posx">
+                <span class="ajuste__valor" id="valor-posx" aria-hidden="true"></span>
+              </div>
+              <div class="ajuste">
+                <label for="posy">Posición vertical</label>
+                <input id="posy" type="range" min="0" max="100" step="1" value="50" aria-describedby="valor-posy">
+                <span class="ajuste__valor" id="valor-posy" aria-hidden="true"></span>
+              </div>
+              <div class="ajuste" id="ajuste-angulo" hidden>
+                <label for="angulo">Posición alrededor del producto</label>
+                <input id="angulo" type="range" min="-180" max="180" step="1" value="0" aria-describedby="valor-angulo">
+                <span class="ajuste__valor" id="valor-angulo" aria-hidden="true"></span>
+              </div>
+              <div class="ajuste">
+                <label for="escala">Tamaño del diseño</label>
+                <input id="escala" type="range" min="40" max="180" step="1" value="100" aria-describedby="valor-escala">
+                <span class="ajuste__valor" id="valor-escala" aria-hidden="true"></span>
+              </div>
+            </div>
 
             <div class="ajustes" id="ajustes-repetida" hidden>
               <div class="ajuste">
@@ -156,6 +199,7 @@
   <script src="js/almacen-catalogo.js"></script>
   <script src="js/carrito.js"></script>
   <script src="js/vista-previa.js"></script>
+  <script src="js/visor-3d.js"></script>
   <script src="js/producto.js"></script>
 </body>
 </html>

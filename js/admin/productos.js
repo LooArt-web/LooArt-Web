@@ -143,14 +143,17 @@
   }
 
   function pintarFoto() {
-    var segura = recorte ? null : datos.vistaPrevia.urlImagenSegura(foto);
+    var sinRecorteTipo = ["termo", "taza"].indexOf($("modelo").value) !== -1;
+    var segura = recorte && !sinRecorteTipo ? null : datos.vistaPrevia.urlImagenSegura(foto);
     $("foto-vista").hidden = !segura;
     if (segura) $("foto-vista").src = segura;
     $("quitar-foto").hidden = !foto && !recorte;
 
-    $("piezas-foto").hidden = !recorte;
-    $("intercambiar-foto").hidden = !(recorte && recorte.reverso);
-    $("subir-reverso").hidden = !recorte;
+    /* Termos y tazas giran el diseño: no necesitan reverso */
+    var cilindro = ["termo", "taza"].indexOf($("modelo").value) !== -1;
+    $("piezas-foto").hidden = !recorte || cilindro;
+    $("intercambiar-foto").hidden = !(recorte && recorte.reverso) || cilindro;
+    $("subir-reverso").hidden = !recorte || cilindro;
     $("subir-reverso").textContent = recorte && recorte.reverso ? "Cambiar reverso" : "Subir reverso aparte";
     $("quitar-reverso").hidden = !(recorte && recorte.reverso);
     ["frente", "reverso"].forEach(function (lado) {
@@ -163,7 +166,9 @@
         img.alt = lado === "frente" ? "Frente recortado" : "Reverso recortado";
         caja.appendChild(img);
       } else {
-        caja.appendChild(crear("span", "", lado === "frente" ? "Sin foto" : "Sin reverso: el producto no se voltea"));
+        caja.appendChild(crear("span", "", lado === "frente" ? "Sin foto"
+          : cilindro ? "No hace falta: en termos y tazas el diseño gira alrededor del cuerpo"
+          : "Sin reverso: el producto no se voltea"));
       }
     });
   }
@@ -175,8 +180,9 @@
     return {
       frente: { imagen: p.imagen, ancho: t.w, alto: t.h, zona: p.imagenZona || null, zonaCaja: p.imagenZonaCaja || null,
         borde: p.imagenBorde, cara: p.imagenCara },
-      reverso: p.imagenReverso ? { imagen: p.imagenReverso, ancho: tr.w, alto: tr.h, zona: null, zonaCaja: null,
-        borde: p.imagenBorde, cara: p.imagenCara } : null
+      reverso: p.imagenReverso ? { imagen: p.imagenReverso, ancho: tr.w, alto: tr.h,
+        zona: p.imagenReversoZona || null, zonaCaja: p.imagenReversoZonaCaja || null,
+        borde: p.imagenBorde, cara: p.imagenReversoCara || p.imagenCara } : null
     };
   }
 
@@ -184,7 +190,8 @@
   function camposFoto() {
     if (!recorte) {
       return { imagen: foto, imagenRecortada: false, imagenReverso: null, imagenZona: null, imagenZonaCaja: null,
-        imagenBorde: null, imagenCara: null, imagenTam: null, imagenReversoTam: null };
+        imagenBorde: null, imagenCara: null, imagenTam: null, imagenReversoTam: null,
+        imagenReversoZona: null, imagenReversoZonaCaja: null, imagenReversoCara: null };
     }
     var f = recorte.frente, r = recorte.reverso;
     return {
@@ -196,7 +203,11 @@
       imagenBorde: f.borde || null,
       imagenCara: f.cara || null,
       imagenTam: { w: f.ancho, h: f.alto },
-      imagenReversoTam: r ? { w: r.ancho, h: r.alto } : null
+      imagenReversoTam: r ? { w: r.ancho, h: r.alto } : null,
+      /* Zona imprimible del reverso: así el color y el diseño también se ven atrás */
+      imagenReversoZona: r && r.zona ? r.zona : null,
+      imagenReversoZonaCaja: r && r.zonaCaja ? r.zonaCaja : null,
+      imagenReversoCara: r && r.cara ? r.cara : null
     };
   }
 
@@ -241,6 +252,9 @@
     $("visible").checked = p ? p.visible !== false : true;
     foto = p && p.imagen ? datos.vistaPrevia.urlImagenSegura(p.imagen) : null;
     recorte = recorteDeProducto(p);
+    ultimoArchivo = null;
+    modeloAnterior = null;
+    pintarModelo();
     $("foto").value = "";
     $("foto-reverso").value = "";
     $("estado-foto").textContent = "";
@@ -274,28 +288,48 @@
     });
   }
 
-  $("foto").addEventListener("change", function () {
-    var archivo = this.files[0];
-    mostrarError("foto", "");
-    if (!archivo) return;
-    if (archivo.type.indexOf("image/") !== 0) {
-      mostrarError("foto", "El archivo debe ser una imagen (JPG, PNG, etc.).");
-      this.value = "";
-      return;
+  /* Último archivo elegido: permite recortarlo o no al cambiar la casilla, sin volver a subirlo */
+  var ultimoArchivo = null;
+
+  /* Mensaje según por qué falló el recorte */
+  function errorFoto(err, sinProducto) {
+    var m = err && err.message;
+    if (m === "imagen" || m === "lectura") {
+      return "No pudimos leer esa imagen: puede estar dañada o en un formato que el navegador no abre. Prueba con JPG o PNG.";
     }
-    if ($("quitar-fondo").checked && datos.recorte) {
+    return sinProducto;
+  }
+
+  /* Fotos muy chicas se ven borrosas en la tienda */
+  function avisoTamano(pieza) {
+    var lado = pieza ? Math.max(pieza.ancho || 0, pieza.alto || 0) : 0;
+    return lado && lado < 300
+      ? " Ojo: el producto mide solo " + lado + " px en la foto y se verá borroso. Usa una foto de al menos 600 px."
+      : "";
+  }
+
+  function procesarFoto(archivo) {
+    mostrarError("foto", "");
+    if ($("quitar-fondo").checked && !$("quitar-fondo").disabled && datos.recorte) {
       $("estado-foto").textContent = "Quitando el fondo…";
       datos.recorte.procesar(archivo).then(function (r) {
         recorte = { frente: r.frente, reverso: r.reverso };
         foto = r.frente.imagen;
-        $("estado-foto").textContent = r.reverso
+        $("estado-foto").textContent = (r.reverso
           ? "Listo: encontramos frente y reverso. Revisa que el frente sea la cara donde va el diseño."
-          : "Listo: encontramos una sola pieza. Si tienes la foto del reverso, súbela aparte.";
+          : "Listo: encontramos una sola pieza. Si tienes la foto del reverso, súbela aparte.") + avisoTamano(r.frente);
         pintarFoto();
-      }, function () {
+      }, function (err) {
         $("estado-foto").textContent = "";
-        mostrarError("foto", "No encontramos el producto en la foto. Prueba con otra o desmarca “Quitar el fondo”.");
+        mostrarError("foto", errorFoto(err, "No encontramos el producto en la foto. Prueba con otra o desmarca “Quitar el fondo”."));
       });
+      return;
+    }
+    if (typeof archivo === "string") {
+      foto = archivo;
+      recorte = null;
+      $("estado-foto").textContent = "";
+      pintarFoto();
       return;
     }
     reducirImagen(archivo).then(function (data) {
@@ -306,6 +340,35 @@
     }, function () {
       mostrarError("foto", "No pudimos leer esa imagen. Prueba con otra.");
     });
+  }
+
+  $("foto").addEventListener("change", function () {
+    var archivo = this.files[0];
+    mostrarError("foto", "");
+    if (!archivo) return;
+    if (archivo.type.indexOf("image/") !== 0) {
+      mostrarError("foto", "El archivo debe ser una imagen (JPG, PNG, etc.).");
+      this.value = "";
+      return;
+    }
+    ultimoArchivo = archivo;
+    procesarFoto(archivo);
+  });
+
+  /* Marcar o desmarcar la casilla vuelve a procesar la foto que ya se eligió */
+  $("quitar-fondo").addEventListener("change", function () {
+    recorteElegido = this.checked;
+    pintarModelo();
+    if (ultimoArchivo) { procesarFoto(ultimoArchivo); return; }
+    if (!this.checked && recorte) {
+      /* Volver a la foto completa (el frente recortado si no hay otra) */
+      recorte = null;
+      $("estado-foto").textContent = "Usaremos la foto tal cual, sin recortar.";
+      pintarFoto();
+    } else if (this.checked && foto && !recorte) {
+      /* Producto ya guardado: se recorta la foto que tiene, sin volver a subirla */
+      procesarFoto(foto);
+    }
   });
 
   /* Reverso en una foto aparte: se recorta y se usa su pieza principal */
@@ -320,14 +383,54 @@
     $("estado-foto").textContent = "Quitando el fondo del reverso…";
     datos.recorte.procesar(archivo).then(function (r) {
       recorte.reverso = r.frente;
-      $("estado-foto").textContent = "Listo: agregamos el reverso.";
+      $("estado-foto").textContent = "Listo: agregamos el reverso." + avisoTamano(r.frente);
       pintarFoto();
-    }, function () {
+    }, function (err) {
       $("estado-foto").textContent = "";
-      mostrarError("foto", "No encontramos el producto en la foto del reverso. Prueba con otra.");
+      mostrarError("foto", errorFoto(err, "No encontramos el producto en la foto del reverso. Prueba con otra."));
     });
     this.value = "";
   });
+
+  /*
+   * Según el tipo de vista previa:
+   *  - termo y taza: modelo 3D completo; la foto no se recorta (solo se usa en el catálogo);
+   *  - foto libre: la foto se muestra tal cual, con inclinación 3D;
+   *  - pin, caja y sticker: se puede recortar frente y reverso.
+   */
+  var AYUDA_MODELO = {
+    termo: "El cliente verá un termo 3D que gira 360°, con su color y su diseño envolviendo el cuerpo.",
+    taza: "El cliente verá una taza 3D con asa que gira 360°, con su color y su diseño alrededor.",
+    pin: "Pin redondo con frente y reverso. Si subes un mockup con las dos caras, se recortan y se voltea.",
+    caja: "Prisma 3D con el diseño al frente. Con fotos de frente y reverso se usa el visor de doble cara.",
+    sticker: "Lámina 3D con el diseño al frente y el papel protector atrás.",
+    foto: "Tu foto con inclinación 3D y el diseño del cliente encima. Si trae frente y reverso, se pueden separar para voltearla."
+  };
+  var recorteElegido = true;
+  var modeloAnterior = null;
+  function pintarModelo() {
+    var m = $("modelo").value;
+    var bloqueado = m === "termo" || m === "taza";
+    var casilla = $("quitar-fondo");
+    if (bloqueado) {
+      if (!casilla.disabled) recorteElegido = casilla.checked;
+      casilla.checked = false;
+      casilla.disabled = true;
+    } else {
+      casilla.disabled = false;
+      /* Foto libre empieza sin recorte; se puede marcar si la foto trae frente y reverso */
+      if (m !== modeloAnterior) casilla.checked = m === "foto" ? !!recorte : recorteElegido;
+    }
+    modeloAnterior = m;
+    $("ayuda-modelo").textContent = AYUDA_MODELO[m] || "";
+    var aviso = $("aviso-recorte");
+    aviso.hidden = !bloqueado && !(m === "foto" && !casilla.checked);
+    aviso.textContent = bloqueado
+      ? "Sin recorte: se usará el modelo 3D cilíndrico completo. La foto solo aparece en el catálogo."
+      : "La foto se usará tal cual, con inclinación 3D. Si trae frente y reverso (como una playera por los dos lados), marca la casilla para separarlos y que se pueda voltear.";
+    pintarFoto();
+  }
+  $("modelo").addEventListener("change", pintarModelo);
 
   $("intercambiar-foto").addEventListener("click", function () {
     if (!recorte || !recorte.reverso) return;
