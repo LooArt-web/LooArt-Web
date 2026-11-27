@@ -15,7 +15,7 @@ MySQL 8.0.16 o superior · InnoDB · utf8mb4. La V2 se probó en MySQL 8.0.46.
 ## Estado
 
 La V001 es la V2 que probó David **más** la tabla `producto_archivo` y **sin** la columna `productos.imagen_principal`.
-Antes de darla por validada hay que volver a ejecutar la migración y las pruebas.
+**Validada:** David ejecutó la migración y las pruebas el 27-nov-2026 y obtuvo los 22 errores esperados.
 
 ## Instalación
 
