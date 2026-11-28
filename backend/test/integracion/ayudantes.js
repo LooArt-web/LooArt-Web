@@ -10,11 +10,11 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import mysql from "mysql2/promise";
 import { leerConfig } from "../../src/config.js";
-import { crearPool } from "../../src/db.js";
+import { crearPool, opcionesConexion } from "../../src/db.js";
+import { validarResguardo } from "./resguardo.js";
 
-const HOSTS_DE_PRUEBA = new Set(["127.0.0.1", "localhost", "mysql"]);
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
-const MIGRACIONES = path.join(RAIZ, "database", "migrations");
+export const MIGRACIONES = path.join(RAIZ, "database", "migrations");
 
 export function configDePrueba() {
   const config = leerConfig({
@@ -23,11 +23,7 @@ export function configDePrueba() {
     URL_SITIO: "https://looart-web.pages.dev",
     ...process.env
   });
-  if (config.entorno !== "test") throw new Error("Resguardo A9: se requiere NODE_ENV=test");
-  if (config.db.nombre !== "looart1") throw new Error("Resguardo A9: la base debe ser looart1");
-  if (!HOSTS_DE_PRUEBA.has(config.db.host)) {
-    throw new Error("Resguardo A9: DB_HOST no está en la lista de hosts de prueba");
-  }
+  validarResguardo(config, process.env);
   return config;
 }
 
@@ -39,10 +35,7 @@ export function configDePrueba() {
 export async function aplicarMigraciones(config) {
   const archivos = (await readdir(MIGRACIONES)).filter((f) => /^V\d{3}__.+\.sql$/.test(f)).sort();
   const conexion = await mysql.createConnection({
-    host: config.db.host,
-    port: config.db.puerto,
-    user: config.db.usuario,
-    password: config.db.clave,
+    ...opcionesConexion(config),
     multipleStatements: true
   });
   try {
