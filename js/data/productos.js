@@ -20,8 +20,9 @@ window.LooArt = window.LooArt || {};
 
 window.LooArt.config = {
   preciosDeEjemplo: true,   /* pon false cuando el cliente entregue precios reales */
-  vigenciaMeses: 1,         /* vigencia de la cotización */
-  whatsapp: "525661939690"  /* número del negocio, con lada de país */
+  vigenciaMeses: 1          /* vigencia de la cotización */
+  /* El número de WhatsApp del negocio ya no vive aquí: lo pone el servidor
+     (variable WHATSAPP_NEGOCIO) en el enlace de /api/cotizaciones/:token/mensaje-whatsapp. */
 };
 
 window.LooArt.productos = [
