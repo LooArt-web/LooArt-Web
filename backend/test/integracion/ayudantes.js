@@ -29,7 +29,11 @@ export function configDePrueba() {
   return config;
 }
 
-/** Aplica V001 y las migraciones V00N siguientes, en orden, sobre una base vacía. */
+/**
+ * Borra `looart1` y aplica V001 y las V00N siguientes, en orden.
+ * Se borra la base completa porque V001 solo elimina sus propias tablas:
+ * las que agregan migraciones posteriores quedarían de una corrida anterior.
+ */
 export async function aplicarMigraciones(config) {
   const archivos = (await readdir(MIGRACIONES)).filter((f) => /^V\d{3}__.+\.sql$/.test(f)).sort();
   const conexion = await mysql.createConnection({
@@ -40,6 +44,7 @@ export async function aplicarMigraciones(config) {
     multipleStatements: true
   });
   try {
+    await conexion.query("DROP DATABASE IF EXISTS looart1");
     for (const archivo of archivos) {
       await conexion.query(await readFile(path.join(MIGRACIONES, archivo), "utf8"));
     }

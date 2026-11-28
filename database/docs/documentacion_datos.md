@@ -4,7 +4,7 @@ Nov 26, 2026 · @LooArt
 
 ## Propósito y convenciones
 
-Este documento define las reglas, los estados, el significado de cada columna y la trazabilidad de la base de datos **looart1** (MySQL 8.0.16+, InnoDB, utf8mb4). Es la referencia común para Back end (Zoram), Base de datos (David), Front end (Luis) y Documentación (Jafet), y corresponde al script `database/migrations/V001__esquema_inicial.sql`.
+Este documento define las reglas, los estados, el significado de cada columna y la trazabilidad de la base de datos **looart1** (MySQL 8.0.16+, InnoDB, utf8mb4). Es la referencia común para Back end (Zoram), Base de datos (David), Front end (Luis) y Documentación (Jafet), y corresponde a `database/migrations/V001__esquema_inicial.sql` más `V002__catalogo_y_personalizacion.sql` (**PROPUESTO**, ver la sección “Cambios de V002”).
 
 Cada regla y decisión lleva uno de tres estados, como pide el expediente del proyecto:
 
@@ -147,7 +147,21 @@ La base tiene 16 tablas y 2 vistas, con los nombres reales del esquema de David.
 | id\_categoria | BIGINT UNSIGNED | No | — | FK → categorias (RESTRICT) | Categoría a la que pertenece |
 | nombre | VARCHAR(150) | No | — | UK (id\_categoria, nombre) | Nombre comercial (RN-009) |
 | descripcion | TEXT | Sí | NULL | — | Descripción del detalle del producto |
+| maqueta | VARCHAR(10) | No | caja | `CHECK` termo, taza, pin, caja, sticker o foto | **V002, PROPUESTO.** Escena de la vista previa y del visor 3D (D11) |
+| recorte | JSON | Sí | NULL | `CHECK` objeto JSON | **V002, PROPUESTO.** Datos de la foto recortada: zona, borde, cara y tamaño del frente y del reverso. Lo valida el backend |
 | activo | TINYINT(1) | No | 1 | índice (id\_categoria, activo) | 0 = no aparece en el catálogo |
+| creado\_en / actualizado\_en | DATETIME | No | ahora | — | Auditoría |
+
+**producto\_color** — **V002, PROPUESTO (D2).** Colores en que se ofrece un producto; el `hex` tiñe la vista previa. El color elegido se guarda como texto en `personalizaciones.color`.
+
+| Columna | Tipo | Nulo | Default | Llave / restricción | Descripción |
+| --- | --- | --- | --- | --- | --- |
+| id\_color | BIGINT UNSIGNED | No | auto | PK | Identificador |
+| id\_producto | BIGINT UNSIGNED | No | — | FK → productos (CASCADE); UK (id\_producto, nombre) | Producto al que pertenece |
+| nombre | VARCHAR(40) | No | — | `CHECK` no vacío | Nombre visible, por ejemplo “Negro” |
+| hex | CHAR(7) | No | — | `CHECK` `#RRGGBB` | Color de la vista previa |
+| orden | SMALLINT UNSIGNED | No | 1 | `CHECK` ≥ 1 | Orden en la lista |
+| activo | TINYINT(1) | No | 1 | — | 0 = ya no se ofrece |
 | creado\_en / actualizado\_en | DATETIME | No | ahora | — | Auditoría |
 
 **producto\_archivo** — Fotos y modelos 3D de cada producto. Los archivos viven en el almacenamiento de objetos; aquí solo se guarda su ruta (RN-033).
@@ -157,6 +171,7 @@ La base tiene 16 tablas y 2 vistas, con los nombres reales del esquema de David.
 | id\_archivo\_producto | BIGINT UNSIGNED | No | auto | PK | Identificador |
 | id\_producto | BIGINT UNSIGNED | No | — | FK → productos (CASCADE) | Producto al que pertenece |
 | tipo | VARCHAR(10) | No | — | `CHECK` IMAGEN o MODELO\_3D | Clase de archivo |
+| cara | VARCHAR(7) | No | frente | `CHECK` frente o reverso; reverso solo en IMAGEN | **V002, PROPUESTO.** Foto del frente o del reverso (pines, cajas, foto libre) |
 | ruta | VARCHAR(500) | No | — | UK | Clave generada por el backend en el almacenamiento |
 | nombre\_original | VARCHAR(255) | No | — | — | Nombre con el que se subió; solo para mostrar |
 | tipo\_mime | VARCHAR(50) | No | — | `CHECK` según el tipo | Imágenes: jpeg, png, webp. Modelos: glTF o GLB |
@@ -314,6 +329,21 @@ La base tiene 16 tablas y 2 vistas, con los nombres reales del esquema de David.
 | vw\_reporte\_producto\_dia | Cotizaciones, unidades e importe por producto y por día | Reportes por rango de fechas y producto (RF-019) |
 
 Ambas vistas usan `SQL SECURITY INVOKER`: se ejecutan con los permisos de quien consulta, así funcionan en cualquier hosting.
+
+## Cambios de V002 (PROPUESTO)
+
+`V002__catalogo_y_personalizacion.sql` guarda en la base lo que el front ya usa para la vista previa y el visor 3D, para que ninguna función se pierda al dejar `localStorage`. Todo es **PROPUESTO** hasta que el equipo lo apruebe en su Pull Request.
+
+| Cambio | Discrepancia | Para qué |
+| --- | --- | --- |
+| `productos.maqueta` | D11 | Escena 3D: termo, taza, pin, caja, sticker o foto libre |
+| `productos.recorte` | D11 | Foto recortada del frente y del reverso |
+| `producto_archivo.cara` | D11 | Distinguir la foto del reverso |
+| `producto_color` | D2 | Colores del producto con su hex |
+| `tematicas.motivo` | D4 | Patrón incluido (puntos, estrellas, flores, rayas, cuadros, corazones, ondas); la `imagen`, si existe, tiene prioridad |
+| `personalizaciones.diseno` | D3 | Colocación del diseño (modo, tamaño, ángulo, escala, posición y cara). El backend lo valida |
+
+Pruebas: `tests/V002__pruebas_restricciones.sql` (8 errores esperados). Reversión: `migrations/reversion/V002__revertir.sql`.
 
 ## Matriz de trazabilidad
 
