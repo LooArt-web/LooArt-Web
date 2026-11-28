@@ -1,6 +1,6 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { cp, mkdtemp, writeFile, appendFile } from "node:fs/promises";
+import { cp, mkdtemp, writeFile, appendFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import mysql from "mysql2/promise";
@@ -32,8 +32,13 @@ after(async () => {
 test("en un servidor vacío aplica todas las migraciones en orden; la segunda vez, ninguna", async () => {
   await cx.query("DROP DATABASE IF EXISTS looart1");
   const dir = await copiaDeMigraciones();
-  assert.deepEqual(await migrar({ config, dir }), ["V001", "V002"]);
-  assert.deepEqual(await aplicadas(), ["V001", "V002"]);
+  const todas = (await readdir(dir))
+    .filter((f) => /^V\d{3}__.+\.sql$/.test(f))
+    .sort()
+    .map((f) => f.slice(0, 4));
+  assert.deepEqual(todas.slice(0, 2), ["V001", "V002"]);
+  assert.deepEqual(await migrar({ config, dir }), todas);
+  assert.deepEqual(await aplicadas(), todas);
   const [[f]] = await cx.query("SELECT COUNT(*) AS n FROM looart1.estatus_cotizacion");
   assert.ok(f.n > 0, "V001 cargó el catálogo de estatus");
   assert.deepEqual(await migrar({ config, dir }), []);
