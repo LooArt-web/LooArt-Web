@@ -43,7 +43,8 @@ const esquema = z
     R2_SECRETO: opcional,
     R2_BUCKET: opcional,
     R2_URL_PUBLICA: opcional,
-    WHATSAPP_NEGOCIO: opcional,
+    WHATSAPP_NEGOCIO: z.string().regex(/^\d{12,13}$/),
+    URL_SITIO: origen,
     SESION_HORAS: z.coerce.number().int().min(1).max(24).default(8),
     BLOQUEO_MINUTOS: z.coerce.number().int().min(1).max(1440).default(15)
   })
@@ -100,7 +101,8 @@ export function leerConfig(env) {
             }
           : null
     },
-    whatsappNegocio: v.WHATSAPP_NEGOCIO ?? null,
+    whatsappNegocio: v.WHATSAPP_NEGOCIO,
+    urlSitio: v.URL_SITIO,
     sesionHoras: v.SESION_HORAS,
     bloqueoMinutos: v.BLOQUEO_MINUTOS
   });

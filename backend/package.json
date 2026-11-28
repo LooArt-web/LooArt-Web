@@ -22,12 +22,14 @@
     "helmet": "8.3.0",
     "multer": "2.5.0",
     "mysql2": "3.24.6",
+    "pdfkit": "0.21.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "eslint": "10.16.0",
     "globals": "17.14.0",
+    "pdf-parse": "2.4.5",
     "prettier": "3.10.1",
     "supertest": "7.3.2"
   }

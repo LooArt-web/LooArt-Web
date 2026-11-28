@@ -2,7 +2,7 @@
  * Almacenamiento en disco para desarrollo y pruebas (A4). Misma interfaz que R2.
  * Las claves las genera el servidor; aun así se validan para que nunca salgan de `dir`.
  */
-import { mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 
 const CLAVE_VALIDA = /^[a-z0-9][a-z0-9/_.-]*$/;
@@ -25,7 +25,15 @@ export function crearAlmacenDisco({ dir, urlBase = "/archivos" }) {
     async guardar(clave, buffer) {
       const destino = ruta(clave);
       await mkdir(path.dirname(destino), { recursive: true });
-      await writeFile(destino, buffer, { flag: "wx" }); // nunca sobrescribe
+      await writeFile(destino, buffer, { flag: "wx" }); // nunca sobrescribe (EEXIST)
+    },
+    async leer(clave) {
+      try {
+        return await readFile(ruta(clave));
+      } catch (e) {
+        if (e.code === "ENOENT") return null;
+        throw e;
+      }
     },
     async borrar(clave) {
       await rm(ruta(clave), { force: true });
