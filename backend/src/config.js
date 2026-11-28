@@ -38,7 +38,7 @@ const esquema = z
       )
       .pipe(z.array(origen).min(1)),
     SECRETO_ORIGEN: z.string().trim().min(32).optional(),
-    ALMACEN: z.enum(["disco", "r2"]).default("disco"),
+    ALMACEN: z.enum(["disco", "bd", "r2"]).default("disco"),
     R2_CUENTA: opcional,
     R2_LLAVE: opcional,
     R2_SECRETO: opcional,
@@ -50,6 +50,13 @@ const esquema = z
     BLOQUEO_MINUTOS: z.coerce.number().int().min(1).max(1440).default(15)
   })
   .superRefine((v, ctx) => {
+    if (v.NODE_ENV === "production" && !v.SECRETO_ORIGEN) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["SECRETO_ORIGEN"],
+        message: "requerida en producción"
+      });
+    }
     if (v.ALMACEN !== "r2") return;
     for (const k of ["R2_CUENTA", "R2_LLAVE", "R2_SECRETO", "R2_BUCKET", "R2_URL_PUBLICA"]) {
       if (!v[k]) ctx.addIssue({ code: "custom", path: [k], message: "requerida con ALMACEN=r2" });
@@ -70,6 +77,8 @@ function congelar(obj) {
 export function leerConfig(env) {
   const entrada = {};
   for (const k of CLAVES) if (env[k] !== undefined && env[k] !== "") entrada[k] = env[k];
+  // Render (y otros hosting) fijan PORT; PUERTO, si viene, manda.
+  if (entrada.PUERTO === undefined && env.PORT) entrada.PUERTO = env.PORT;
 
   const r = esquema.safeParse(entrada);
   if (!r.success) {

@@ -1,0 +1,74 @@
+name: Preparar BD de producción
+
+# Manual. Contra TiDB (secretos TIDB_*): aplica las migraciones pendientes con
+# `npm run migrar` (nunca borra datos ni vuelve a correr V001) y crea o actualiza el
+# usuario de la app con SOLO SELECT, INSERT, UPDATE y DELETE sobre looart1.
+# La contraseña de ese usuario sale del secreto TIDB_CLAVE_APP (la misma que va en
+# DB_CLAVE de Render); nunca se escribe en el repositorio ni en el log.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preparar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    env:
+      NODE_ENV: production
+      DB_HOST: ${{ secrets.TIDB_HOST }}
+      DB_PUERTO: ${{ secrets.TIDB_PUERTO }}
+      DB_USUARIO: ${{ secrets.TIDB_USUARIO }}
+      DB_CLAVE: ${{ secrets.TIDB_CLAVE }}
+      DB_NOMBRE: looart1
+      DB_TLS: "true"
+      MYSQL_PWD: ${{ secrets.TIDB_CLAVE }}
+      CLAVE_APP: ${{ secrets.TIDB_CLAVE_APP }}
+      # leerConfig exige estas variables; aquí no se usan (el número es ficticio)
+      ORIGENES_PERMITIDOS: https://looart-web.pages.dev
+      WHATSAPP_NEGOCIO: "520000000000"
+      URL_SITIO: https://looart-web.pages.dev
+      SECRETO_ORIGEN: solo-para-validar-la-configuracion-del-migrador
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci --omit=dev
+
+      - name: Cliente mysql con TLS verificado
+        run: |
+          printf '[client]\nhost=%s\nport=%s\nuser=%s\nssl-mode=VERIFY_IDENTITY\nssl-ca=/etc/ssl/certs/ca-certificates.crt\n' \
+            "$DB_HOST" "$DB_PUERTO" "$DB_USUARIO" > ~/.my.cnf
+          chmod 600 ~/.my.cnf
+
+      - name: CHECK activos en TiDB
+        run: mysql -e "SET GLOBAL tidb_enable_check_constraint = ON"
+
+      - name: Migraciones pendientes
+        run: npm run migrar
+
+      - name: Usuario de la app (solo SELECT, INSERT, UPDATE, DELETE)
+        run: |
+          if [ ${#CLAVE_APP} -lt 16 ]; then
+            echo "Falta el secreto TIDB_CLAVE_APP o tiene menos de 16 caracteres."; exit 1
+          fi
+          prefijo="${DB_USUARIO%%.*}"
+          usuario="${prefijo}.looart_app"
+          clave_sql=$(printf '%s' "$CLAVE_APP" | sed "s/'/''/g")
+          mysql -e "CREATE USER IF NOT EXISTS '${usuario}'@'%' IDENTIFIED BY '${clave_sql}' REQUIRE SSL;
+                    ALTER USER '${usuario}'@'%' IDENTIFIED BY '${clave_sql}' REQUIRE SSL;
+                    GRANT SELECT, INSERT, UPDATE, DELETE ON looart1.* TO '${usuario}'@'%';"
+          echo "Usuario de la app: ${usuario}"
+          mysql -e "SHOW GRANTS FOR '${usuario}'@'%'"

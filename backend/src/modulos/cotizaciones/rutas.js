@@ -24,6 +24,29 @@ const FOLIO_VALIDO = /^LA-\d{4}-\d{6}$/;
 /** PDF: 20 descargas por IP cada 15 minutos si no se configura otra cosa. */
 const LIMITE_PDF = { ventanaMs: 15 * 60 * 1000, max: 20 };
 
+/** Tope del alta completa (datos + imágenes): 4 imágenes de 5 MB. Protege la memoria de Render. */
+export const MAX_CUERPO_ALTA = 20 * 1024 * 1024;
+
+/** Sin Content-Length no se puede saber el tamaño antes de leer: se rechaza. */
+function limitarCuerpo(req, res, next) {
+  const largo = req.get("content-length");
+  if (largo === undefined) {
+    res.set("Connection", "close");
+    return next(new ErrorApi(411, "LONGITUD_REQUERIDA", "La petición debe indicar su tamaño."));
+  }
+  if (Number(largo) > MAX_CUERPO_ALTA) {
+    res.set("Connection", "close");
+    return next(
+      new ErrorApi(
+        413,
+        "CUERPO_DEMASIADO_GRANDE",
+        "La cotización pasa de 20 MB entre todas las imágenes."
+      )
+    );
+  }
+  next();
+}
+
 /** Un token mal formado se trata igual que uno inexistente: no da pistas. */
 function exigirToken(req, _res, next) {
   if (!TOKEN_VALIDO.test(req.params.token)) {
@@ -47,7 +70,7 @@ export function rutasCotizaciones({ limites, ...deps }) {
       )
   });
 
-  r.post("/", limiteAlta, subida.any(), async (req, res) => {
+  r.post("/", limiteAlta, limitarCuerpo, subida.any(), async (req, res) => {
     const datos = validarCotizacion(req.body?.datos);
     const imagenes = validarImagenes(req.files, datos.renglones.length);
     res.status(201).json(await servicio.crear(datos, imagenes));

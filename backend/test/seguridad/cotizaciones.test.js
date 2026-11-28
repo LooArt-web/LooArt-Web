@@ -1,5 +1,6 @@
 import { test, before, beforeEach, after } from "node:test";
 import assert from "node:assert/strict";
+import http from "node:http";
 import request from "supertest";
 import { crearApp } from "../../src/app.js";
 import { baseLimpia, registroEnMemoria } from "../integracion/ayudantes.js";
@@ -128,5 +129,45 @@ test("un token mal formado responde 404 sin consultar la BD", async () => {
   for (const t of ["corto", "x".repeat(33), "%27%20OR%201%3D1%20--%20aaaaaaaaaaaaaaaa"]) {
     const r = await request(sinBd).get(`/api/cotizaciones/${t}`);
     assert.equal(r.status, 404, t);
+  }
+});
+
+test("una cotización de más de 20 MB en total se rechaza con 413", async () => {
+  const r = await request(app)
+    .post("/api/cotizaciones")
+    .set("Content-Type", "multipart/form-data; boundary=x")
+    .send(Buffer.alloc(20 * 1024 * 1024 + 1, 0x61));
+  assert.equal(r.status, 413);
+  assert.equal(r.body.error.codigo, "CUERPO_DEMASIADO_GRANDE");
+});
+
+test("un alta sin Content-Length (envío por partes) se rechaza con 411", async () => {
+  const servidor = app.listen(0);
+  try {
+    const { port } = servidor.address();
+    const respuesta = await new Promise((resolve, reject) => {
+      const req = http.request(
+        {
+          port,
+          method: "POST",
+          path: "/api/cotizaciones",
+          headers: {
+            "Content-Type": "multipart/form-data; boundary=x",
+            "Transfer-Encoding": "chunked"
+          }
+        },
+        (res) => {
+          let cuerpo = "";
+          res.on("data", (c) => (cuerpo += c));
+          res.on("end", () => resolve({ status: res.statusCode, cuerpo: JSON.parse(cuerpo) }));
+        }
+      );
+      req.on("error", reject);
+      req.end("--x--");
+    });
+    assert.equal(respuesta.status, 411);
+    assert.equal(respuesta.cuerpo.error.codigo, "LONGITUD_REQUERIDA");
+  } finally {
+    servidor.close();
   }
 });

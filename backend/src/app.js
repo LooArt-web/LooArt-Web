@@ -1,11 +1,13 @@
 import express from "express";
 import { idSolicitud } from "./middleware/idSolicitud.js";
 import { seguridadBase } from "./middleware/seguridad.js";
+import { validarOrigen } from "./middleware/origen.js";
 import { manejadorErrores, noEncontrado } from "./errores.js";
 import { rutasSalud } from "./modulos/salud/rutas.js";
 import { rutasCatalogo } from "./modulos/catalogo/rutas.js";
 import { rutasCotizaciones } from "./modulos/cotizaciones/rutas.js";
 import { crearAlmacen } from "./almacen/index.js";
+import { rutasArchivos } from "./modulos/archivos/rutas.js";
 
 /** Por IP cada 15 minutos: 10 altas de cotización y 20 descargas de PDF (configurable en pruebas). */
 const LIMITES = {
@@ -27,15 +29,19 @@ const registroConsola = {
 export function crearApp({
   config,
   db,
-  almacen = crearAlmacen(config),
+  almacen = crearAlmacen(config, db),
   reloj = () => new Date(),
   limites = LIMITES,
   registro = registroConsola
 }) {
   const app = express();
   app.disable("x-powered-by");
+  // Render pone un balanceador delante: la IP del cliente directo llega en X-Forwarded-For.
+  app.set("trust proxy", 1);
 
   app.use(idSolicitud);
+  // El secreto del proxy se revisa antes de leer el cuerpo: sin él no se procesa nada.
+  app.use(validarOrigen(config));
   app.use(seguridadBase(config));
 
   app.use("/api/salud", rutasSalud({ db, registro }));
@@ -46,6 +52,8 @@ export function crearApp({
     "/api/cotizaciones",
     rutasCotizaciones({ db, almacen, reloj, limites, registro, config })
   );
+
+  app.use("/api/archivos", rutasArchivos({ almacen }));
 
   app.use(noEncontrado);
   app.use(manejadorErrores(registro));
