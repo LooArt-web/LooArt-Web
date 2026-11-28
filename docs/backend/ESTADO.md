@@ -1,13 +1,14 @@
 # Estado del back-end — 27-nov-2026
 
-- **main:** V001 + plan aprobado y ADR-001 (PR #2 fusionado).
-- **PR abiertos (apilados, fusionar en orden, método merge):** #3 fase 1 → #4 fase 2 (V002) → #5 fase 3 → fase 4 (PDF y WhatsApp). CI en verde en #3, #4 y #5.
-- **Pruebas (rama fase-04):** 101/101 · V001 22 errores · V002 8 errores.
-- **Fase 4:** `GET /api/cotizaciones/:token/pdf` y `/mensaje-whatsapp`; `WHATSAPP_NEGOCIO` y `URL_SITIO` obligatorias; el número ya no está en el front.
-- **Faltan:** fases 5 a 11 y el despliegue a staging.
-- **Respondidas:** P1 (todo nace en NUEVA) · P2 (cliente nuevo por cotización) · P6 (V002 aprobada, reglas aún PROPUESTO) · token mal formado → 404 · número de WhatsApp confirmado (solo en el servidor).
+- **main:** V001, plan + ADR-001 (#2) y fases 1 a 4 (#3–#6), fusionadas con método merge.
+- **PR abierto:** #7 `package-lock.json` generado en CI (Node 22) y `backend.yml` con `npm ci` + caché. CI en verde.
+- **Pruebas:** 101/101 con `npm ci` · V001 22 errores · V002 8 errores.
+- **Ya funciona (local y CI):** salud, catálogo público, alta y consulta de cotizaciones, PDF y mensaje de WhatsApp por token.
+- **Siguiente:** bloque B del prompt v4 (hosting sin tarjeta: Render + TiDB Starter + proxy de Pages, driver de almacenamiento `bd`); después las fases 5, 6, 7 y 10.
+- **Decisiones:** P1, P2 y P6 respondidas · token mal formado → 404 · número de WhatsApp solo en `WHATSAPP_NEGOCIO` · no se reescribe el historial de git.
 - **Abiertas:**
+  - Cuentas de TiDB Cloud, Render y monitor (cron-job.org o UptimeRobot): las crea Zoram. Región propuesta: Oregon.
+  - Compatibilidad de TiDB (`CHECK` con `tidb_enable_check_constraint`): se comprueba en B2. Dueño: Claude.
   - P3 SUPERUSUARIO: se pregunta al empezar la fase 5. Dueño: Zoram.
-  - P5 proxy vs dominio y hosting: se preguntan al empezar el despliegue. Dueño: Zoram.
-- **Sin bloquear:** P4 (RN-023 preparado y apagado) · datos reales del catálogo para staging.
-- **Herramientas:** `git push` y `gh` sin permiso; se publica con el conector de GitHub (salvo `.github/workflows/`, por el editor web).
+- **Sin bloquear:** P4 (RN-023 preparado y apagado) · catálogo real (por ahora, datos de demostración `[Prueba]`).
+- **Herramientas:** conector de GitHub para todo, salvo `.github/workflows/` (403): esos cambios se hacen con el editor web en el navegador.
