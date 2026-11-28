@@ -1,0 +1,32 @@
+{
+  "name": "looart-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "API de LooArt: catálogo, cotizaciones y panel administrativo",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/servidor.js",
+    "test": "node --env-file-if-exists=.env.test --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "test:unit": "node --test \"test/unit/**/*.test.js\"",
+    "test:int": "node --env-file-if-exists=.env.test --test --test-concurrency=1 \"test/integracion/**/*.test.js\" \"test/seguridad/**/*.test.js\"",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "cors": "2.8.6",
+    "express": "5.3.0",
+    "helmet": "8.3.0",
+    "mysql2": "3.24.6",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.16.0",
+    "globals": "17.14.0",
+    "prettier": "3.10.1",
+    "supertest": "7.3.2"
+  }
+}

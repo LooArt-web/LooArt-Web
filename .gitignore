@@ -1,0 +1,5 @@
+# Back-end
+backend/node_modules/
+backend/.env
+backend/almacen-local/
+backend/.env.test

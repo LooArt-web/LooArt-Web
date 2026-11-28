@@ -1,0 +1,62 @@
+name: Back-end
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root-solo-ci
+          MYSQL_USER: looart_test
+          MYSQL_PASSWORD: clave-solo-ci
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot-solo-ci"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PUERTO: "3306"
+      DB_USUARIO: looart_test
+      DB_CLAVE: clave-solo-ci
+      DB_NOMBRE: looart1
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Permisos del usuario de pruebas sobre looart1
+        run: mysql -h 127.0.0.1 -uroot -proot-solo-ci -e "GRANT ALL ON looart1.* TO 'looart_test'@'%'; FLUSH PRIVILEGES;"
+
+      # Con package-lock.json se instala exactamente lo bloqueado; sin él, las versiones exactas de package.json.
+      - name: Instalar dependencias
+        run: if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - run: npm run lint
+      - run: npm test
+
+      - name: Pruebas de restricciones de V001 (deben dar exactamente 22 errores)
+        run: |
+          mysql -h 127.0.0.1 -ulooart_test -pclave-solo-ci < ../database/migrations/V001__esquema_inicial.sql
+          errores=$(mysql -h 127.0.0.1 -ulooart_test -pclave-solo-ci --force looart1 \
+            < ../database/tests/V001__pruebas_restricciones.sql 2>&1 >/dev/null | grep -c '^ERROR' || true)
+          echo "Errores obtenidos: $errores (esperados: 22)"
+          test "$errores" -eq 22
