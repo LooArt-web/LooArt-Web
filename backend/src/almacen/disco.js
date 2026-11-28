@@ -5,10 +5,17 @@
 import { mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 
+const MIME = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".webp": "image/webp",
+  ".pdf": "application/pdf",
+  ".glb": "model/gltf-binary"
+};
 const CLAVE_VALIDA = /^[a-z0-9][a-z0-9/_.-]*$/;
 const codificar = (clave) => clave.split("/").map(encodeURIComponent).join("/");
 
-export function crearAlmacenDisco({ dir, urlBase = "/archivos" }) {
+export function crearAlmacenDisco({ dir, urlBase = "/api/archivos" }) {
   const ruta = (clave) => {
     const r = path.resolve(dir, clave);
     if (
@@ -34,6 +41,12 @@ export function crearAlmacenDisco({ dir, urlBase = "/archivos" }) {
         if (e.code === "ENOENT") return null;
         throw e;
       }
+    },
+    async leerConTipo(clave) {
+      const bytes = await this.leer(clave);
+      return bytes
+        ? { mime: MIME[path.extname(clave)] ?? "application/octet-stream", bytes }
+        : null;
     },
     async borrar(clave) {
       await rm(ruta(clave), { force: true });
