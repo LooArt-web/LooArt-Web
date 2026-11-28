@@ -8,6 +8,9 @@ MySQL 8.0.16 o superior · InnoDB · utf8mb4. La V2 se probó en MySQL 8.0.46.
 | --- | --- |
 | `migrations/V001__esquema_inicial.sql` | Esquema inicial **congelado** (27-nov-2026): 16 tablas, 2 vistas y datos iniciales |
 | `tests/V001__pruebas_restricciones.sql` | 22 pruebas que comprueban que cada restricción rechaza datos inválidos |
+| `migrations/V002__catalogo_y_personalizacion.sql` | **PROPUESTO.** Maqueta 3D, recorte, colores, motivo de temática y diseño del renglón |
+| `tests/V002__pruebas_restricciones.sql` | 8 pruebas de las restricciones de V002 |
+| `migrations/reversion/V002__revertir.sql` | Deshace V002 y deja la base como en V001 (borra esos datos) |
 | `docs/documentacion_datos.md` | Reglas de negocio, estados, diccionario de datos y trazabilidad |
 | `docs/diagramas/` | Diagramas 01–09 en PNG (se suben aparte) |
 | `historico/LooartBaseDeDatos_dump_2026-11-25.sql` | Dump original de David (25-nov). Solo es referencia; **no ejecutar** |
@@ -23,12 +26,14 @@ En una base vacía (la migración **borra y crea** todas las tablas):
 
 ```bash
 mysql -u root -p < migrations/V001__esquema_inicial.sql
+mysql -u root -p < migrations/V002__catalogo_y_personalizacion.sql
 ```
 
 ## Pruebas
 
 ```bash
-mysql -u root -p --force -e "source tests/V001__pruebas_restricciones.sql" looart1
+mysql -u root -p --force -e "source tests/V001__pruebas_restricciones.sql" looart1   # 22 errores
+mysql -u root -p --force -e "source tests/V002__pruebas_restricciones.sql" looart1   # 8 errores
 ```
 
 En MySQL Workbench activa *Query > Continue on SQL Script Error*.
