@@ -138,7 +138,8 @@ export async function cotizacionPorToken(db, token) {
     `SELECT c.id_cotizacion AS id, c.folio, DATE_FORMAT(c.fecha_emision, '%Y-%m-%d %H:%i:%s') AS fechaEmision,
             DATE_FORMAT(c.fecha_vencimiento, '%Y-%m-%d') AS fechaVencimiento,
             c.subtotal, c.costo_entrega AS costoEntrega, c.total, c.moneda,
-            e.clave AS estatusClave, e.nombre AS estatusNombre, cl.nombre AS nombreCliente
+            e.clave AS estatusClave, e.nombre AS estatusNombre, cl.nombre AS nombreCliente,
+            cl.telefono AS celularCliente, cl.email AS correoCliente, cl.codigo_postal AS cpCliente
        FROM cotizaciones c
        JOIN estatus_cotizacion e ON e.id_estatus = c.id_estatus
        JOIN clientes cl ON cl.id_cliente = c.id_cliente
@@ -160,4 +161,33 @@ export async function cotizacionPorToken(db, token) {
     [c.id]
   );
   return { ...c, renglones };
+}
+
+/**
+ * Datos mínimos para decidir si el PDF guardado sigue vigente. La huella cambia
+ * con cualquier cosa que el PDF muestre y pueda cambiar (estatus, envío, total).
+ */
+export async function huellaPdf(db, token) {
+  const [[f]] = await db.query(
+    `SELECT id_cotizacion AS id, folio, YEAR(fecha_emision) AS anio, pdf_ruta AS pdfRuta,
+            LEFT(SHA2(CONCAT_WS('|', actualizado_en, id_estatus, IFNULL(costo_entrega, ''), total), 256), 16) AS huella
+       FROM cotizaciones
+      WHERE token_publico = ?`,
+    [token]
+  );
+  return f ?? null;
+}
+
+/**
+ * Guarda la ruta del PDF sin tocar `actualizado_en`, para que la huella no cambie.
+ * Solo si `pdf_ruta` sigue siendo la que se leyó: una petición lenta no puede
+ * regresarla a una clave anterior. Devuelve si hubo cambio.
+ */
+export async function guardarPdfRuta(db, id, ruta, anterior) {
+  const [r] = await db.query(
+    `UPDATE cotizaciones SET pdf_ruta = ?, actualizado_en = actualizado_en
+      WHERE id_cotizacion = ? AND pdf_ruta <=> ?`,
+    [ruta, id, anterior]
+  );
+  return r.affectedRows === 1;
 }

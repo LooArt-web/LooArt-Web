@@ -15,7 +15,23 @@ const subida = multer({
 /**
  * POST /api/cotizaciones          multipart: `datos` (JSON) + `imagen_N` opcionales
  * GET  /api/cotizaciones/:token   consulta pública, solo con el token (RN-021)
+ * GET  /api/cotizaciones/:token/pdf               PDF de la cotización (RF-015)
+ * GET  /api/cotizaciones/:token/mensaje-whatsapp  texto y enlace wa.me (RF-016)
  */
+
+const FOLIO_VALIDO = /^LA-\d{4}-\d{6}$/;
+
+/** PDF: 20 descargas por IP cada 15 minutos si no se configura otra cosa. */
+const LIMITE_PDF = { ventanaMs: 15 * 60 * 1000, max: 20 };
+
+/** Un token mal formado se trata igual que uno inexistente: no da pistas. */
+function exigirToken(req, _res, next) {
+  if (!TOKEN_VALIDO.test(req.params.token)) {
+    return next(new ErrorApi(404, "NO_ENCONTRADO", "La cotización no existe."));
+  }
+  next();
+}
+
 export function rutasCotizaciones({ limites, ...deps }) {
   const servicio = crearServicioCotizaciones(deps);
   const r = Router();
@@ -37,13 +53,42 @@ export function rutasCotizaciones({ limites, ...deps }) {
     res.status(201).json(await servicio.crear(datos, imagenes));
   });
 
-  r.get("/:token", async (req, res) => {
-    // Un token mal formado se trata igual que uno inexistente: no da pistas.
-    if (!TOKEN_VALIDO.test(req.params.token)) {
-      throw new ErrorApi(404, "NO_ENCONTRADO", "La cotización no existe.");
-    }
+  const pdf = limites.pdf ?? LIMITE_PDF;
+  const limitePdf = rateLimit({
+    windowMs: pdf.ventanaMs,
+    limit: pdf.max,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    handler: (_req, _res, next) =>
+      next(
+        new ErrorApi(
+          429,
+          "DEMASIADAS_PETICIONES",
+          "Espera unos minutos antes de volver a descargar."
+        )
+      )
+  });
+
+  r.get("/:token", exigirToken, async (req, res) => {
     res.set("Cache-Control", "no-store");
     res.json(await servicio.consultar(req.params.token));
+  });
+
+  r.get("/:token/pdf", limitePdf, exigirToken, async (req, res) => {
+    const { folio, buffer } = await servicio.pdf(req.params.token);
+    // El folio lo genera el servidor; aun así se valida antes de ponerlo en una cabecera.
+    if (!FOLIO_VALIDO.test(folio)) throw new Error("Folio con formato inesperado");
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="${folio}.pdf"`,
+      "Cache-Control": "private, no-store"
+    });
+    res.send(buffer);
+  });
+
+  r.get("/:token/mensaje-whatsapp", exigirToken, async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.json(await servicio.mensajeWhatsapp(req.params.token));
   });
 
   return r;
