@@ -68,17 +68,20 @@ jobs:
           mysql -e "SET GLOBAL tidb_enable_check_constraint = ON"
           mysql -e "SELECT @@global.tidb_enable_check_constraint AS check_constraint"
 
-      - name: Restricciones de V001 y V002 (errores exactos) y reversión de V002
+      - name: Restricciones de V001, V002 y V003 (errores exactos) y sus reversiones
         run: |
           contar() { mysql --force looart1 < "$1" 2>&1 >/dev/null | grep -c '^ERROR' || true; }
           esperar() { echo "$1: $2 errores (esperados: $3)"; test "$2" -eq "$3"; }
           mysql -e "DROP DATABASE IF EXISTS looart1"
           mysql < ../database/migrations/V001__esquema_inicial.sql
           mysql < ../database/migrations/V002__catalogo_y_personalizacion.sql
+          mysql < ../database/migrations/V003__almacen_objeto.sql
           esperar V001 "$(contar ../database/tests/V001__pruebas_restricciones.sql)" 22
           esperar V002 "$(contar ../database/tests/V002__pruebas_restricciones.sql)" 8
+          esperar V003 "$(contar ../database/tests/V003__pruebas_restricciones.sql)" 6
+          mysql < ../database/migrations/reversion/V003__revertir.sql
           mysql < ../database/migrations/reversion/V002__revertir.sql
-          esperar "V001 tras revertir V002" "$(contar ../database/tests/V001__pruebas_restricciones.sql)" 22
+          esperar "V001 tras revertir V003 y V002" "$(contar ../database/tests/V001__pruebas_restricciones.sql)" 22
 
       - name: Pruebas de integración contra TiDB (folios concurrentes, rollback, vistas, FOR UPDATE)
         run: npm test
