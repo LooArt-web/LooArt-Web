@@ -1,0 +1,40 @@
+# Render Blueprint (ADR-002): back-end de LooArt en el plan gratuito.
+# Los secretos (sync: false) se capturan en el panel de Render, nunca en el repositorio.
+services:
+  - type: web
+    name: looart-api
+    runtime: node
+    plan: free
+    region: oregon            # misma región que TiDB Cloud (us-west-2)
+    rootDir: backend
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/salud
+    autoDeployTrigger: commit # cada fusión a main se publica sola
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: DB_HOST
+        sync: false
+      - key: DB_PUERTO
+        value: "4000"
+      - key: DB_USUARIO
+        sync: false
+      - key: DB_CLAVE
+        sync: false
+      - key: DB_NOMBRE
+        value: looart1
+      - key: DB_TLS
+        value: "true"
+      - key: ALMACEN
+        value: bd
+      - key: ORIGENES_PERMITIDOS
+        value: https://looart-web.pages.dev
+      - key: URL_SITIO
+        value: https://looart-web.pages.dev
+      - key: WHATSAPP_NEGOCIO
+        sync: false
+      - key: SECRETO_ORIGEN       # Render lo genera; se copia a la variable del mismo nombre en Pages
+        generateValue: true

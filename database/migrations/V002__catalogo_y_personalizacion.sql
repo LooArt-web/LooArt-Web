@@ -15,10 +15,15 @@
 -- =====================================================================
 USE looart1;
 
+-- Compatibilidad con TiDB (ADR-002): cada ALTER agrega primero la columna y, en un
+-- ALTER aparte, su CHECK. TiDB no deja que un CHECK use una columna agregada en el
+-- mismo ALTER; en MySQL el resultado es idéntico.
+
 -- D11 · maqueta y recorte de la foto ----------------------------------------
 ALTER TABLE productos
   ADD COLUMN maqueta VARCHAR(10) NOT NULL DEFAULT 'caja' AFTER descripcion,
-  ADD COLUMN recorte JSON NULL AFTER maqueta,          -- se valida con Zod en el back-end
+  ADD COLUMN recorte JSON NULL AFTER maqueta;          -- se valida con Zod en el back-end
+ALTER TABLE productos
   ADD CONSTRAINT chk_productos_maqueta
     CHECK (maqueta IN ('termo', 'taza', 'pin', 'caja', 'sticker', 'foto')),
   ADD CONSTRAINT chk_productos_recorte
@@ -26,7 +31,8 @@ ALTER TABLE productos
 
 -- Foto del reverso: solo las imágenes pueden ser de reverso; los modelos 3D siempre "frente".
 ALTER TABLE producto_archivo
-  ADD COLUMN cara VARCHAR(7) NOT NULL DEFAULT 'frente' AFTER tipo,
+  ADD COLUMN cara VARCHAR(7) NOT NULL DEFAULT 'frente' AFTER tipo;
+ALTER TABLE producto_archivo
   ADD CONSTRAINT chk_producto_archivo_cara
     CHECK (cara IN ('frente', 'reverso') AND (cara = 'frente' OR tipo = 'IMAGEN'));
 
@@ -54,13 +60,15 @@ CREATE TABLE producto_color (
 
 -- D4 · motivo incluido de la temática (la imagen, si existe, tiene prioridad) --
 ALTER TABLE tematicas
-  ADD COLUMN motivo VARCHAR(20) NULL AFTER imagen,
+  ADD COLUMN motivo VARCHAR(20) NULL AFTER imagen;
+ALTER TABLE tematicas
   ADD CONSTRAINT chk_tematicas_motivo CHECK (
     motivo IS NULL
     OR motivo IN ('puntos', 'estrellas', 'flores', 'rayas', 'cuadros', 'corazones', 'ondas'));
 
 -- D3 · colocación del diseño del renglón (vista-previa.js → normalizarDiseno) --
 ALTER TABLE personalizaciones
-  ADD COLUMN diseno JSON NULL AFTER color,             -- se valida con Zod en el back-end
+  ADD COLUMN diseno JSON NULL AFTER color;             -- se valida con Zod en el back-end
+ALTER TABLE personalizaciones
   ADD CONSTRAINT chk_personalizaciones_diseno
     CHECK (diseno IS NULL OR JSON_TYPE(diseno) = 'OBJECT');
