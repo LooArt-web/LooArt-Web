@@ -10,7 +10,7 @@
 
 **Especificación:** `PROMPT_BACKEND_LooArt.md` (prompt de Zoram), `database/docs/documentacion_datos.md` (RN-001 a RN-033, T1–T8) y `database/migrations/V001__esquema_inicial.sql`.
 
-**Estado:** BORRADOR, esperando la aprobación de Zoram. No se escribe código hasta que se apruebe.
+**Estado:** APROBADO por Zoram (27-nov-2026). El avance de cada fase está en [ESTADO.md](ESTADO.md).
 
 ---
 
@@ -65,6 +65,8 @@ Aplican a todas las tareas:
 Otra diferencia sin cambio de esquema: el borrador guarda la imagen de referencia como *data URL*. En la fase 10, `cotizaciones.js` la convierte en `Blob` para el `multipart`.
 
 ## 4. Preguntas para Zoram (bloquean solo su parte)
+
+> **Respuestas del 27-nov-2026:** P1 → no hay precio estimado; toda cotización nace en NUEVA. P2 → un registro de cliente nuevo por cotización. P6 → V002 aprobada por el equipo (sus reglas siguen marcadas PROPUESTO hasta que las confirme el cliente). Token con formato inválido → 404. Siguen abiertas P3, P4 y P5.
 
 - **P1 (D9, RN-018):** ¿cómo se decide que un precio es "estimado"? Por ejemplo, con un campo `es_estimado` en `precios` o cuando no hay rango para esa cantidad. Mientras no respondas, todas las cotizaciones nacen en NUEVA.
 - **P2 (pendiente del expediente):** si un comprador vuelve a cotizar con el mismo celular o correo, ¿se reutiliza su registro de `clientes`? Mientras no se decida, **se crea uno nuevo cada vez**. Es lo más seguro, porque nadie puede alterar los datos de otro escribiendo su correo.
@@ -223,3 +225,109 @@ La fase 1 está detallada al nivel de tareas, abajo. Las demás tienen su alcanc
 - [ ] **Paso 3:** commit `ci(backend): lint, pruebas y restricciones de V001`.
 
 **Cierre de la fase 1:** PR `backend/fase-01-base` → `main` con la salida de `npm test`, el conteo de 22 y el resumen de 5 líneas.
+
+---
+
+## 9. Fase 4 detallada — PDF y mensaje de WhatsApp (RF-015, RF-016, D10)
+
+**Rama:** `backend/fase-04-pdf-whatsapp`, apilada sobre `backend/fase-03-cotizaciones` (PR #5) mientras no se fusione la pila.
+
+**Decisiones de esta fase:**
+- **Huella del PDF.** `sha256(actualizado_en | id_estatus | costo_entrega | total)`, primeros 16 caracteres. Clave: `pdfs/AAAA/<folio>-<huella>.pdf`. Si `pdf_ruta` coincide con la clave esperada, se sirve el PDF guardado; si no, se genera, se guarda, se actualiza `pdf_ruta` y se borra el anterior.
+  - Por qué: cualquier cambio que afecte al PDF (estatus, envío o total en la fase 7) cambia la huella. Incluir estatus, envío y total cubre dos cambios dentro del mismo segundo.
+  - El `UPDATE` de `pdf_ruta` pone `actualizado_en = actualizado_en`. Si no, guardar la ruta cambiaría la huella y el PDF se regeneraría siempre.
+- **Contenido del PDF.** Solo con *snapshots* (`producto_snapshot`, `variante_snapshot`, `precio_unitario_snapshot`) y los datos del cliente. Nunca se lee el catálogo actual.
+- **Fuente.** Helvetica incluida en pdfkit (WinAnsi: acentos, ñ, ¿ y ¡ funcionan). Un carácter que no existe en esa codificación, como un emoji, se cambia por `?` en lugar de romper el PDF.
+- **Nueva variable `URL_SITIO`** (origen https, por ejemplo `https://looart-web.pages.dev`). Sirve para el enlace público del mensaje: `<URL_SITIO>/folio.html?t=<token>`. El front lee ese parámetro en la fase 10.
+- **`WHATSAPP_NEGOCIO`** pasa a ser obligatoria: solo dígitos, de 12 a 13. Las pruebas usan `520000000000`. El número real solo vive en el `.env` del servidor.
+- **Front, cambio mínimo.** Se borra `whatsapp` de `js/data/productos.js`, y `js/folio.js:117` usa `https://wa.me/?text=…` cuando no hay número: WhatsApp abre el selector de contacto. En la fase 10 el botón usará `enlace` de la API.
+- **Límite de peticiones.** PDF: 20 por IP cada 15 minutos (configurable en `limites.pdf`). El mensaje de WhatsApp no gasta CPU y no lleva límite propio.
+- **Token con formato inválido → 404** con el mismo cuerpo que uno inexistente, en los tres endpoints por token (decidido el 27-nov).
+
+**Enfoque de revisión (fase 4):**
+1. **Dos descargas simultáneas del primer PDF:** las dos responden 200 y queda un solo archivo. Si `guardar` encuentra el archivo ya creado (`EEXIST`), lo toma como éxito. Va en la tarea 4.3.
+2. **Emoji o caracteres fuera de WinAnsi** en el texto personalizado: el PDF se genera y muestra `?`. Va en la tarea 4.2.
+3. **Cotización con 50 renglones:** el PDF pasa a más páginas sin cortar renglones. Va en la tarea 4.2.
+4. **El archivo del PDF se borró del almacén pero `pdf_ruta` sigue apuntando a él:** se regenera en lugar de dar 500. Va en la tarea 4.3.
+5. **Texto de WhatsApp con `&`, `#`, `?`, `%`, acentos y saltos de línea:** el enlace llega intacto (`decodeURIComponent(enlace)` devuelve el texto original). Va en la tarea 4.1.
+
+### Tarea 4.1: Texto y enlace de WhatsApp (dominio + configuración)
+
+**Archivos:**
+- Crear: `backend/src/dominio/whatsapp.js`, `backend/src/dominio/formato.js` y `backend/test/unit/whatsapp.test.js`.
+- Modificar: `backend/src/config.js`, `backend/.env.example` y `backend/test/unit/config.test.js`.
+
+**Interfaces:**
+- `formatearPesos(texto: string) → string`: `"2286.00"` → `"$2,286.00"`. Usa `aCentavos`, sin `float`.
+- `textoWhatsApp({ folio, cliente: { nombre, celular }, renglones: [{ cantidad, producto, variante }], subtotal, costoEntrega, total, enlacePublico }) → string`.
+- `enlaceWhatsApp(numero: string, texto: string) → string` = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`.
+- Configuración: `config.whatsappNegocio` (string de 12 a 13 dígitos) y `config.urlSitio` (origen).
+
+- [ ] **Paso 1: pruebas que fallan.**
+  - `formatearPesos("2286.00") === "$2,286.00"`, `formatearPesos("0.50") === "$0.50"` y `formatearPesos("1234567.89") === "$1,234,567.89"`.
+  - El texto contiene, en este orden: `Folio: LA-2026-000001`, `Nombre: Ana Pérez`, `Celular: 5512345678`, `- 12 × [Prueba] Termo (500 ml · Acero)`, `Total: $2,286.00 MXN` y `Ver cotización: <enlacePublico>`.
+  - Con `costoEntrega: null`, el texto incluye `El costo de envío se cotiza aparte.` y no tiene línea `Envío:`.
+  - Con `costoEntrega: "150.00"` y `total: "2436.00"`, el texto incluye `Envío: $150.00` y `Total: $2,436.00 MXN`.
+  - Para un nombre `"Ñandú & Hijos #1?"` y un renglón con salto de línea: `decodeURIComponent(enlace.split("?text=")[1]) === texto`, y lo que sigue a `?text=` no contiene `&`, `#`, `?` ni saltos de línea sin codificar.
+  - Configuración: sin `WHATSAPP_NEGOCIO` lanza un error que la nombra; `"52 55 1234"` y `"5255"` se rechazan; `"520000000000"` se acepta. `URL_SITIO="*"` o una URL con ruta se rechazan.
+- [ ] **Paso 2:** ver que fallan.
+- [ ] **Paso 3:** implementar. En `.env.example`: `WHATSAPP_NEGOCIO=` (vacío, con un comentario sin número real) y `URL_SITIO=https://looart-web.pages.dev`.
+- [ ] **Paso 4:** `npm run test:unit` en verde.
+- [ ] **Paso 5:** commit `feat(backend): texto y enlace de WhatsApp; WHATSAPP_NEGOCIO y URL_SITIO obligatorias`.
+
+### Tarea 4.2: Generador del PDF (dominio puro, sin BD)
+
+**Archivos:**
+- Crear: `backend/src/dominio/pdf-cotizacion.js` y `backend/test/unit/pdf-cotizacion.test.js`.
+- Dependencias: `pdfkit` (producción) y `pdf-parse` (desarrollo), con versión exacta (`-E`).
+
+**Interfaces:**
+- `generarPdfCotizacion(c) → Promise<Buffer>`. `c` es el mismo objeto que arma la consulta por token, más `cliente: { nombre, celular, correo, cp }`.
+- `textoPdfSeguro(s: string) → string`: reemplaza por `?` los caracteres fuera de WinAnsi.
+
+- [ ] **Paso 1: pruebas que fallan** (el texto se extrae con `pdf-parse`).
+  - El texto contiene el folio, `Emisión: 2026-11-27`, `Vence: 2026-12-27`, el nombre, el celular, el correo y el CP del cliente, `[Prueba] Termo`, `500 ml · Acero`, `12`, `$160.50`, `$1,926.00`, `Total` y `El costo de envío se cotiza aparte`.
+  - La personalización aparece: color, temática, texto, y `Con imagen de referencia` cuando `tieneImagen`.
+  - Con un emoji en el texto, el PDF se genera y el texto extraído tiene `?` en su lugar.
+  - Con 50 renglones, el PDF tiene más de una página (`numpages > 1`) y los 50 nombres aparecen.
+  - El buffer empieza con `%PDF-`.
+- [ ] **Paso 2:** ver que fallan.
+- [ ] **Paso 3:** implementar con pdfkit: tamaño carta, márgenes de 50 y salto de página manual cuando `doc.y` pasa del límite.
+- [ ] **Paso 4:** pruebas en verde.
+- [ ] **Paso 5:** commit `feat(backend): PDF de la cotización desde los snapshots`.
+
+### Tarea 4.3: Endpoints `GET /api/cotizaciones/:token/pdf` y `/mensaje-whatsapp`
+
+**Archivos:**
+- Modificar: `backend/src/modulos/cotizaciones/{rutas,servicio,repositorio}.js`, `backend/src/almacen/{disco,index}.js` y `backend/src/app.js`.
+- Pruebas: `backend/test/integracion/pdf-whatsapp.test.js` y `backend/test/seguridad/pdf-whatsapp.test.js`.
+- Front: `js/data/productos.js` y `js/folio.js:117`.
+
+**Interfaces:**
+- `almacen.leer(clave) → Promise<Buffer|null>`: `null` si no existe. `guardar` con `EEXIST` se toma como éxito.
+- `repo.huellaYPdf(db, token) → { id, folio, anio, pdfRuta, huella } | null`. La huella se calcula en SQL con `SHA2(CONCAT_WS('|', actualizado_en, id_estatus, IFNULL(costo_entrega,''), total), 256)`.
+- `repo.guardarPdfRuta(db, id, ruta)`: `UPDATE … SET pdf_ruta = ?, actualizado_en = actualizado_en`.
+- `servicio.pdf(token) → { folio, buffer }` y `servicio.mensajeWhatsapp(token) → { texto, enlace }`.
+
+- [ ] **Paso 1: pruebas que fallan.**
+  - **PDF:** con un token válido da 200, `Content-Type: application/pdf`, `Content-Disposition: attachment; filename="LA-2026-000001.pdf"` y `Cache-Control: private, no-store`. El cuerpo contiene el folio, extraído con `pdf-parse`.
+  - **Mensaje:** con un token válido da 200 `{ texto, enlace }`. El enlace empieza con `https://wa.me/520000000000?text=`, el texto contiene `<URL_SITIO>/folio.html?t=<token>` y la respuesta lleva `Cache-Control: no-store`.
+  - **Tokens:** uno inexistente y uno con formato inválido dan 404, con el mismo `codigo` y `mensaje` en ambos endpoints.
+  - **Reutilización:** dos descargas seguidas dan el mismo `pdf_ruta` y `guardar` se llama una sola vez. Después de `UPDATE cotizaciones SET costo_entrega = 150, total = total + 150` cambia `pdf_ruta`, el archivo anterior ya no existe y el PDF nuevo dice `$150.00`.
+  - **Snapshot:** se cambia `precios.precio_unitario` de la variante 100 a `999.00` y el PDF sigue mostrando `$160.50`.
+  - **Archivo perdido:** se borra el archivo del almacén a mano y se regenera con 200.
+  - **Concurrencia:** dos descargas simultáneas del primer PDF dan 200 las dos y queda un solo archivo en `pdfs/`.
+  - **Seguridad:** con `limites.pdf.max = 2`, la 3.ª descarga da 429. El celular y el correo del cliente no aparecen en ningún log.
+- [ ] **Paso 2:** ver que fallan.
+- [ ] **Paso 3:** implementar.
+  - Ruta del PDF: `limitePdf` → validar el token (404 si no tiene formato) → `servicio.pdf` → `res.type("application/pdf")`.
+  - Front: borrar la propiedad `whatsapp` y usar ``"https://wa.me/" + (config.whatsapp || "")``.
+- [ ] **Paso 4:** `npm test` en verde, y además `grep -rn "525661939690" .` sin resultados, salvo `.git`.
+- [ ] **Paso 5:** commit `feat(backend): PDF y mensaje de WhatsApp por token`.
+
+### Tarea 4.4: Cierre
+
+- [ ] `npm run lint`, `npm test` (resumen) y las 22 + 8 pruebas de restricciones.
+- [ ] `package-lock.json`: medirlo. Si pesa 100 KB o menos, se sube con el resto; si pasa de 100 KB, aviso antes.
+- [ ] Publicar por la API, comparar los SHA con `git hash-object` contra `get_file_contents`, abrir el PR apilado sobre el #5 y revisar el CI con `pull_request_read`.
+- [ ] Actualizar `docs/backend/ESTADO.md` (15 líneas), subirlo en el mismo PR y dar el resumen de 5 líneas.
