@@ -19,6 +19,8 @@ import { precioAplicable } from "../../dominio/precios.js";
 import { formatearFolio } from "../../dominio/folio.js";
 import { generarToken } from "../../dominio/token.js";
 import { detectarImagen, EXTENSION } from "../../dominio/archivos.js";
+import { generarPdfCotizacion } from "../../dominio/pdf-cotizacion.js";
+import { textoWhatsApp, enlaceWhatsApp } from "../../dominio/whatsapp.js";
 
 const noDisponible = (n, codigo, mensaje) =>
   new ErrorApi(422, codigo, `Producto del renglón ${n}: ${mensaje}`);
@@ -29,7 +31,7 @@ const tienePersonalizacion = (r, conImagen) =>
   conImagen ||
   ["color", "idTematica", "tema", "texto", "descripcion", "diseno"].some((k) => r[k] !== undefined);
 
-export function crearServicioCotizaciones({ db, almacen, reloj, registro }) {
+export function crearServicioCotizaciones({ db, almacen, reloj, registro, config }) {
   /** Valida bytes reales y sube; devuelve índice del renglón → datos del archivo guardado. */
   async function subirImagenes(imagenes, anio) {
     const preparadas = new Map();
@@ -165,9 +167,71 @@ export function crearServicioCotizaciones({ db, almacen, reloj, registro }) {
     };
   }
 
-  async function consultar(token) {
+  const noExiste = () => new ErrorApi(404, "NO_ENCONTRADO", "La cotización no existe.");
+
+  async function cargar(token) {
     const c = await repo.cotizacionPorToken(db, token);
-    if (!c) throw new ErrorApi(404, "NO_ENCONTRADO", "La cotización no existe.");
+    if (!c) throw noExiste();
+    return c;
+  }
+
+  async function consultar(token) {
+    return vistaPublica(await cargar(token));
+  }
+
+  /**
+   * PDF de la cotización (RF-015). Se reutiliza el guardado mientras su huella
+   * siga vigente; si cambió algo que el PDF muestra, o el archivo se perdió,
+   * se genera otro con clave nueva y se borra el anterior.
+   */
+  async function pdf(token) {
+    const h = await repo.huellaPdf(db, token);
+    if (!h) throw noExiste();
+    const clave = `pdfs/${h.anio}/${h.folio.toLowerCase()}-${h.huella}.pdf`;
+    if (h.pdfRuta === clave) {
+      const guardado = await almacen.leer(clave);
+      if (guardado) return { folio: h.folio, buffer: guardado };
+    }
+
+    const c = await cargar(token);
+    const buffer = await generarPdfCotizacion({
+      ...vistaPublica(c),
+      cliente: {
+        nombre: c.nombreCliente,
+        celular: c.celularCliente,
+        correo: c.correoCliente,
+        cp: c.cpCliente
+      }
+    });
+    try {
+      await almacen.guardar(clave, buffer, "application/pdf");
+    } catch (e) {
+      // Otra petición simultánea ya guardó este mismo PDF (misma clave = mismo contenido).
+      if (e.code !== "EEXIST") throw e;
+    }
+    if (h.pdfRuta !== clave) {
+      const cambio = await repo.guardarPdfRuta(db, h.id, clave, h.pdfRuta);
+      if (cambio && h.pdfRuta) await borrarSilencioso([h.pdfRuta]);
+    }
+    return { folio: h.folio, buffer };
+  }
+
+  /** Texto y enlace de WhatsApp (RF-016): lleva el enlace público, no el token suelto. */
+  async function mensajeWhatsapp(token) {
+    const c = await cargar(token);
+    const texto = textoWhatsApp({
+      folio: c.folio,
+      cliente: { nombre: c.nombreCliente, celular: c.celularCliente },
+      renglones: c.renglones,
+      subtotal: c.subtotal,
+      costoEntrega: c.costoEntrega,
+      total: c.total,
+      enlacePublico: `${config.urlSitio}/folio.html?t=${token}`
+    });
+    return { texto, enlace: enlaceWhatsApp(config.whatsappNegocio, texto) };
+  }
+
+  function vistaPublica(c) {
     return {
       folio: c.folio,
       fechaEmision: c.fechaEmision,
@@ -200,5 +264,5 @@ export function crearServicioCotizaciones({ db, almacen, reloj, registro }) {
     };
   }
 
-  return { crear, consultar };
+  return { crear, consultar, pdf, mensajeWhatsapp };
 }
