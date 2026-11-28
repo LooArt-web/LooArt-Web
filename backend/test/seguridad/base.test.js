@@ -16,7 +16,9 @@ const config = leerConfig({
   DB_USUARIO: "x",
   DB_CLAVE: "x",
   DB_NOMBRE: "looart1",
-  ORIGENES_PERMITIDOS: "https://looart-web.pages.dev"
+  ORIGENES_PERMITIDOS: "https://looart-web.pages.dev",
+  WHATSAPP_NEGOCIO: "520000000000",
+  URL_SITIO: "https://looart-web.pages.dev"
 });
 const dbOk = { query: async () => [[{ uno: 1 }]] };
 const nuevaApp = (registro = registroEnMemoria()) => crearApp({ config, db: dbOk, registro });

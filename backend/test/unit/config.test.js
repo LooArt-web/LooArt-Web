@@ -11,7 +11,9 @@ const ENV_OK = Object.freeze({
   DB_CLAVE: "clave-super-secreta-123",
   DB_NOMBRE: "looart1",
   ORIGENES_PERMITIDOS: "https://looart-web.pages.dev, http://localhost:5500",
-  ALMACEN: "disco"
+  ALMACEN: "disco",
+  WHATSAPP_NEGOCIO: "520000000000",
+  URL_SITIO: "https://looart-web.pages.dev"
 });
 
 test("leerConfig convierte tipos y separa los orígenes", () => {
@@ -93,4 +95,26 @@ test("SECRETO_ORIGEN, si se define, debe tener al menos 32 caracteres", () => {
   assert.throws(() => leerConfig({ ...ENV_OK, SECRETO_ORIGEN: "corto" }), /SECRETO_ORIGEN/);
   const c = leerConfig({ ...ENV_OK, SECRETO_ORIGEN: "x".repeat(32) });
   assert.equal(c.secretoOrigen.length, 32);
+});
+
+test("WHATSAPP_NEGOCIO es obligatoria y solo admite de 12 a 13 dígitos", () => {
+  const env = { ...ENV_OK };
+  delete env.WHATSAPP_NEGOCIO;
+  assert.throws(() => leerConfig(env), /WHATSAPP_NEGOCIO/);
+  for (const malo of ["52 55 1234", "5255", "+520000000000", "52000000000000"]) {
+    assert.throws(() => leerConfig({ ...ENV_OK, WHATSAPP_NEGOCIO: malo }), /WHATSAPP_NEGOCIO/);
+  }
+  assert.equal(leerConfig({ ...ENV_OK }).whatsappNegocio, "520000000000");
+});
+
+test("URL_SITIO es obligatoria y debe ser un origen sin ruta", () => {
+  const env = { ...ENV_OK };
+  delete env.URL_SITIO;
+  assert.throws(() => leerConfig(env), /URL_SITIO/);
+  assert.throws(() => leerConfig({ ...ENV_OK, URL_SITIO: "*" }), /URL_SITIO/);
+  assert.throws(
+    () => leerConfig({ ...ENV_OK, URL_SITIO: "https://looart-web.pages.dev/folio" }),
+    /URL_SITIO/
+  );
+  assert.equal(leerConfig({ ...ENV_OK }).urlSitio, "https://looart-web.pages.dev");
 });
