@@ -4,7 +4,7 @@ Nov 26, 2026 · @LooArt
 
 ## Propósito y convenciones
 
-Este documento define las reglas, los estados, el significado de cada columna y la trazabilidad de la base de datos **looart1** (MySQL 8.0.16+, InnoDB, utf8mb4). Es la referencia común para Back end (Zoram), Base de datos (David), Front end (Luis) y Documentación (Jafet), y corresponde a `database/migrations/V001__esquema_inicial.sql` más `V002__catalogo_y_personalizacion.sql` (**PROPUESTO**, ver la sección “Cambios de V002”).
+Este documento define las reglas, los estados, el significado de cada columna y la trazabilidad de la base de datos **looart1** (MySQL 8.0.16+, InnoDB, utf8mb4). Es la referencia común para Back end (Zoram), Base de datos (David), Front end (Luis) y Documentación (Jafet), y corresponde a `database/migrations/V001__esquema_inicial.sql` más `V002__catalogo_y_personalizacion.sql` (**PROPUESTO**, ver la sección “Cambios de V002”) y `V003__almacen_objeto.sql` (**PROPUESTO / TEMPORAL**, ver “Cambios de V003”).
 
 Cada regla y decisión lleva uno de tres estados, como pide el expediente del proyecto:
 
@@ -343,7 +343,21 @@ Ambas vistas usan `SQL SECURITY INVOKER`: se ejecutan con los permisos de quien 
 | `tematicas.motivo` | D4 | Patrón incluido (puntos, estrellas, flores, rayas, cuadros, corazones, ondas); la `imagen`, si existe, tiene prioridad |
 | `personalizaciones.diseno` | D3 | Colocación del diseño (modo, tamaño, ángulo, escala, posición y cara). El backend lo valida |
 
-Pruebas: `tests/V002__pruebas_restricciones.sql` (8 errores esperados). Reversión: `migrations/reversion/V002__revertir.sql`.
+Compatibilidad con TiDB (ADR-002): cada `ALTER TABLE` agrega la columna y, en otro `ALTER`, su `CHECK`, porque TiDB no permite que un `CHECK` use una columna agregada en el mismo `ALTER`; en MySQL el resultado es idéntico. Pruebas: `tests/V002__pruebas_restricciones.sql` (8 errores esperados). Reversión: `migrations/reversion/V002__revertir.sql`.
+
+## Cambios de V003 (PROPUESTO / TEMPORAL)
+
+`V003__almacen_objeto.sql` crea **almacen\_objeto**, donde se guardan los archivos (imágenes del catálogo, imágenes de referencia y PDF) mientras el hosting gratuito no tenga disco persistente ni R2 (ADR-002). Se usa solo con `ALMACEN=bd`; al pasar a R2 se cambia `ALMACEN=r2`, se copian los archivos y se aplica la reversión.
+
+| Columna | Tipo | Nulo | Default | Regla | Descripción |
+|---|---|---|---|---|---|
+| clave | VARCHAR(255) | No | — | PK; `CHECK` solo minúsculas, dígitos y `/ _ . -` | Ruta lógica, la misma que guardan `producto_archivo.ruta`, `archivos_referencia.ruta` y `cotizaciones.pdf_ruta` |
+| mime | VARCHAR(100) | No | — | `CHECK` jpeg, png, webp, pdf o glb | Tipo con el que se sirve |
+| bytes | LONGBLOB | No | — | — | Contenido del archivo |
+| tamano | INT UNSIGNED | No | — | `CHECK` 1 a 5 242 880 e igual a `LENGTH(bytes)` | Máximo 5 MB, debajo del límite por registro de TiDB |
+| creado | DATETIME | No | CURRENT\_TIMESTAMP | — | Fecha de alta |
+
+Solo `productos/` y `tematicas/` se sirven en público (`GET /api/archivos/...`); las imágenes de referencia y los PDF son privados. Pruebas: `tests/V003__pruebas_restricciones.sql` (6 errores esperados). Reversión: `migrations/reversion/V003__revertir.sql`.
 
 ## Matriz de trazabilidad
 
