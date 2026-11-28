@@ -15,17 +15,19 @@
 -- =====================================================================
 USE looart1;
 
--- Compatibilidad con TiDB (ADR-002): cada ALTER agrega primero la columna y, en un
--- ALTER aparte, su CHECK. TiDB no deja que un CHECK use una columna agregada en el
--- mismo ALTER; en MySQL el resultado es idéntico.
+-- Compatibilidad con TiDB (ADR-002): cada columna nueva va en su propio ALTER y su
+-- CHECK en otro. TiDB no deja que un CHECK (ni un AFTER) use una columna agregada en
+-- el mismo ALTER; en MySQL el resultado es idéntico.
 
 -- D11 · maqueta y recorte de la foto ----------------------------------------
 ALTER TABLE productos
-  ADD COLUMN maqueta VARCHAR(10) NOT NULL DEFAULT 'caja' AFTER descripcion,
+  ADD COLUMN maqueta VARCHAR(10) NOT NULL DEFAULT 'caja' AFTER descripcion;
+ALTER TABLE productos
   ADD COLUMN recorte JSON NULL AFTER maqueta;          -- se valida con Zod en el back-end
 ALTER TABLE productos
   ADD CONSTRAINT chk_productos_maqueta
-    CHECK (maqueta IN ('termo', 'taza', 'pin', 'caja', 'sticker', 'foto')),
+    CHECK (maqueta IN ('termo', 'taza', 'pin', 'caja', 'sticker', 'foto'));
+ALTER TABLE productos
   ADD CONSTRAINT chk_productos_recorte
     CHECK (recorte IS NULL OR JSON_TYPE(recorte) = 'OBJECT');
 
