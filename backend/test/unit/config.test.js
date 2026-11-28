@@ -125,3 +125,18 @@ test("DB_TLS activa TLS hacia la BD; por omisión está apagado", () => {
   assert.equal(leerConfig({ ...ENV_OK, DB_TLS: "false" }).db.tls, false);
   assert.throws(() => leerConfig({ ...ENV_OK, DB_TLS: "si" }), /DB_TLS/);
 });
+
+test("ALMACEN=bd (archivos en la BD, temporal) es válido y no exige credenciales de R2", () => {
+  assert.equal(leerConfig({ ...ENV_OK, ALMACEN: "bd" }).almacen.tipo, "bd");
+});
+
+test("en producción SECRETO_ORIGEN es obligatorio (la API solo se usa a través del proxy)", () => {
+  assert.throws(() => leerConfig({ ...ENV_OK, NODE_ENV: "production" }), /SECRETO_ORIGEN/);
+  const c = leerConfig({ ...ENV_OK, NODE_ENV: "production", SECRETO_ORIGEN: "s".repeat(40) });
+  assert.equal(c.entorno, "production");
+});
+
+test("PUERTO toma PORT (lo fija Render) si PUERTO no viene", () => {
+  assert.equal(leerConfig({ ...ENV_OK, PUERTO: undefined, PORT: "10000" }).puerto, 10000);
+  assert.equal(leerConfig({ ...ENV_OK, PUERTO: "3000", PORT: "10000" }).puerto, 3000);
+});
