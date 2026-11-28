@@ -55,7 +55,7 @@ jobs:
       - run: npm run lint
       - run: npm test
 
-      - name: Pruebas de restricciones de V001 y V002 (errores exactos) y reversión de V002
+      - name: Pruebas de restricciones de V001, V002 y V003 (errores exactos) y sus reversiones
         env:
           MYSQL_PWD: clave-solo-ci
         run: |
@@ -65,8 +65,11 @@ jobs:
           $m -e "DROP DATABASE IF EXISTS looart1"
           $m < ../database/migrations/V001__esquema_inicial.sql
           $m < ../database/migrations/V002__catalogo_y_personalizacion.sql
+          $m < ../database/migrations/V003__almacen_objeto.sql
           esperar V001 "$(contar ../database/tests/V001__pruebas_restricciones.sql)" 22
           esperar V002 "$(contar ../database/tests/V002__pruebas_restricciones.sql)" 8
+          esperar V003 "$(contar ../database/tests/V003__pruebas_restricciones.sql)" 6
+          $m < ../database/migrations/reversion/V003__revertir.sql
           $m < ../database/migrations/reversion/V002__revertir.sql
-          esperar "V001 tras revertir V002" "$(contar ../database/tests/V001__pruebas_restricciones.sql)" 22
+          esperar "V001 tras revertir V003 y V002" "$(contar ../database/tests/V001__pruebas_restricciones.sql)" 22
           $m < ../database/migrations/V002__catalogo_y_personalizacion.sql
