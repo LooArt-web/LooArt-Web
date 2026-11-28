@@ -43,13 +43,15 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
 
       - name: Permisos del usuario de pruebas sobre looart1
         run: mysql -h 127.0.0.1 -uroot -proot-solo-ci -e "GRANT ALL ON looart1.* TO 'looart_test'@'%'; FLUSH PRIVILEGES;"
 
-      # Con package-lock.json se instala exactamente lo bloqueado; sin él, las versiones exactas de package.json.
+      # Instala exactamente lo que fija package-lock.json (falla si no coincide con package.json).
       - name: Instalar dependencias
-        run: if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+        run: npm ci
       - run: npm run lint
       - run: npm test
 
