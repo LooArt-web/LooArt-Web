@@ -25,6 +25,12 @@ const ERRORES_DE_CUERPO = {
   "encoding.unsupported": [415, "CODIFICACION_NO_SOPORTADA", "Codificación no soportada."]
 };
 
+/** Errores de multer (subida de archivos) que son culpa de la petición. */
+const ERRORES_DE_SUBIDA = {
+  LIMIT_FILE_SIZE: [413, "ARCHIVO_DEMASIADO_GRANDE", "Cada imagen debe pesar 5 MB o menos."],
+  LIMIT_FIELD_VALUE: [413, "CUERPO_DEMASIADO_GRANDE", "La petición es demasiado grande."]
+};
+
 export function noEncontrado(_req, _res, next) {
   next(new ErrorApi(404, "NO_ENCONTRADO", "El recurso no existe."));
 }
@@ -40,6 +46,12 @@ export function manejadorErrores(registro) {
       ({ status, codigo, message: mensaje } = err);
     } else if (ERRORES_DE_CUERPO[err.type]) {
       [status, codigo, mensaje] = ERRORES_DE_CUERPO[err.type];
+    } else if (err.name === "MulterError") {
+      [status, codigo, mensaje] = ERRORES_DE_SUBIDA[err.code] ?? [
+        400,
+        "DATOS_INVALIDOS",
+        "Los archivos enviados no son válidos."
+      ];
     } else {
       [status, codigo, mensaje] = [500, "ERROR_INTERNO", "Ocurrió un error inesperado."];
       // Solo el tipo y el código: el mensaje crudo puede traer SQL o datos personales.

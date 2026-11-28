@@ -1,17 +1,25 @@
 /**
- * Almacenamiento de archivos (A4). En esta fase solo arma URLs públicas;
- * guardar y borrar llegan en la fase 3. La BD guarda la clave, nunca el archivo.
+ * Almacenamiento de archivos (A4). La BD guarda la clave, nunca el archivo.
+ *   disco → desarrollo y pruebas (carpeta backend/almacen-local, fuera de git)
+ *   r2    → producción. Solo arma URLs; guardar y borrar llegan con el
+ *           despliegue (fase 11), así que por ahora fallan de forma explícita.
  */
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { crearAlmacenDisco } from "./disco.js";
 
-/** Codifica cada segmento de la clave sin tocar las "/". */
+const DIR_LOCAL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../almacen-local");
 const codificar = (clave) => clave.split("/").map(encodeURIComponent).join("/");
 
-/**
- * @param {{ almacen: { tipo: "disco"|"r2", r2: { urlPublica: string } | null } }} config
- * @returns {{ urlPublica: (clave: string) => string }}
- */
 export function crearAlmacen(config) {
-  const base =
-    config.almacen.tipo === "r2" ? config.almacen.r2.urlPublica.replace(/\/+$/, "") : "/archivos";
-  return { urlPublica: (clave) => `${base}/${codificar(clave)}` };
+  if (config.almacen.tipo !== "r2") return crearAlmacenDisco({ dir: DIR_LOCAL });
+  const base = config.almacen.r2.urlPublica.replace(/\/+$/, "");
+  const pendiente = async () => {
+    throw new Error("El almacenamiento en R2 se implementa en la fase 11");
+  };
+  return {
+    urlPublica: (clave) => `${base}/${codificar(clave)}`,
+    guardar: pendiente,
+    borrar: pendiente
+  };
 }
