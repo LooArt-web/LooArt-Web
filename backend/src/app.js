@@ -7,8 +7,11 @@ import { rutasCatalogo } from "./modulos/catalogo/rutas.js";
 import { rutasCotizaciones } from "./modulos/cotizaciones/rutas.js";
 import { crearAlmacen } from "./almacen/index.js";
 
-/** Alta de cotizaciones: 10 por IP cada 15 minutos (configurable en pruebas). */
-const LIMITES = { cotizaciones: { ventanaMs: 15 * 60 * 1000, max: 10 } };
+/** Por IP cada 15 minutos: 10 altas de cotización y 20 descargas de PDF (configurable en pruebas). */
+const LIMITES = {
+  cotizaciones: { ventanaMs: 15 * 60 * 1000, max: 10 },
+  pdf: { ventanaMs: 15 * 60 * 1000, max: 20 }
+};
 
 const registroConsola = {
   error: (obj) => console.error(JSON.stringify(obj)),
@@ -39,7 +42,10 @@ export function crearApp({
   const { catalogo, tematicas } = rutasCatalogo({ db, almacen, reloj });
   app.use("/api/catalogo", catalogo);
   app.use("/api/tematicas", tematicas);
-  app.use("/api/cotizaciones", rutasCotizaciones({ db, almacen, reloj, limites, registro }));
+  app.use(
+    "/api/cotizaciones",
+    rutasCotizaciones({ db, almacen, reloj, limites, registro, config })
+  );
 
   app.use(noEncontrado);
   app.use(manejadorErrores(registro));

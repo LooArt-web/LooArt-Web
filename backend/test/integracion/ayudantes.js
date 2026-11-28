@@ -19,6 +19,8 @@ const MIGRACIONES = path.join(RAIZ, "database", "migrations");
 export function configDePrueba() {
   const config = leerConfig({
     ORIGENES_PERMITIDOS: "https://looart-web.pages.dev",
+    WHATSAPP_NEGOCIO: "520000000000",
+    URL_SITIO: "https://looart-web.pages.dev",
     ...process.env
   });
   if (config.entorno !== "test") throw new Error("Resguardo A9: se requiere NODE_ENV=test");

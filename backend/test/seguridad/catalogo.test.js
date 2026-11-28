@@ -11,7 +11,9 @@ const config = leerConfig({
   DB_USUARIO: "x",
   DB_CLAVE: "x",
   DB_NOMBRE: "looart1",
-  ORIGENES_PERMITIDOS: "https://looart-web.pages.dev"
+  ORIGENES_PERMITIDOS: "https://looart-web.pages.dev",
+  WHATSAPP_NEGOCIO: "520000000000",
+  URL_SITIO: "https://looart-web.pages.dev"
 });
 // Si la validación falla, la BD nunca debe consultarse.
 const dbQueNoSeUsa = {

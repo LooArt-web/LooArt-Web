@@ -322,7 +322,7 @@ La fase 1 está detallada al nivel de tareas, abajo. Las demás tienen su alcanc
 - [ ] **Paso 3:** implementar.
   - Ruta del PDF: `limitePdf` → validar el token (404 si no tiene formato) → `servicio.pdf` → `res.type("application/pdf")`.
   - Front: borrar la propiedad `whatsapp` y usar ``"https://wa.me/" + (config.whatsapp || "")``.
-- [ ] **Paso 4:** `npm test` en verde, y además `grep -rn "525661939690" .` sin resultados, salvo `.git`.
+- [ ] **Paso 4:** `npm test` en verde, y además una búsqueda del número real del negocio en el repositorio no da resultados (fuera de `.git`).
 - [ ] **Paso 5:** commit `feat(backend): PDF y mensaje de WhatsApp por token`.
 
 ### Tarea 4.4: Cierre

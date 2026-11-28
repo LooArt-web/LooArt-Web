@@ -20,6 +20,7 @@ export function crearAlmacen(config) {
   return {
     urlPublica: (clave) => `${base}/${codificar(clave)}`,
     guardar: pendiente,
+    leer: pendiente,
     borrar: pendiente
   };
 }

@@ -114,7 +114,7 @@
     return l.join("\n");
   }
 
-  $("whatsapp").href = "https://wa.me/" + config.whatsapp + "?text=" + encodeURIComponent(mensajeWhatsApp());
+  $("whatsapp").href = "https://wa.me/" + (config.whatsapp || "") + "?text=" + encodeURIComponent(mensajeWhatsApp());
 
   /* ---------- PDF (impresión del navegador) ---------- */
   function construirDocumento() {
