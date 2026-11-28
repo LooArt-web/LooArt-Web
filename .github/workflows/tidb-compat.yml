@@ -1,0 +1,94 @@
+name: Compatibilidad TiDB
+
+# Prueba manual (B2): migra y corre las pruebas de restricciones y de integración
+# contra TiDB Cloud. BORRA y recrea looart1: solo se usa antes de cargar datos reales.
+on:
+  workflow_dispatch:
+    inputs:
+      confirmacion:
+        description: "Escribe BORRAR-LOOART1 (la prueba borra y recrea looart1 en TiDB)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  tidb:
+    if: inputs.confirmacion == 'BORRAR-LOOART1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    env:
+      NODE_ENV: test
+      DB_HOST: ${{ secrets.TIDB_HOST }}
+      DB_PUERTO: ${{ secrets.TIDB_PUERTO }}
+      DB_USUARIO: ${{ secrets.TIDB_USUARIO }}
+      DB_CLAVE: ${{ secrets.TIDB_CLAVE }}
+      DB_NOMBRE: looart1
+      DB_TLS: "true"
+      PRUEBAS_HOST_REMOTO: ${{ secrets.TIDB_HOST }}
+      MYSQL_PWD: ${{ secrets.TIDB_CLAVE }}
+      # Valores de prueba que exige leerConfig (número ficticio; el real solo vive en Render)
+      ORIGENES_PERMITIDOS: https://looart-web.pages.dev
+      WHATSAPP_NEGOCIO: "520000000000"
+      URL_SITIO: https://looart-web.pages.dev
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      - name: Cliente mysql con TLS verificado
+        run: |
+          printf '[client]\nhost=%s\nport=%s\nuser=%s\nssl-mode=VERIFY_IDENTITY\nssl-ca=/etc/ssl/certs/ca-certificates.crt\n' \
+            "$DB_HOST" "$DB_PUERTO" "$DB_USUARIO" > ~/.my.cnf
+          chmod 600 ~/.my.cnf
+          mysql -e "SELECT VERSION() AS version, @@global.tidb_enable_check_constraint AS check_constraint, @@global.sql_mode AS sql_mode, @@global.time_zone AS zona"
+
+      - name: No borrar datos reales
+        run: |
+          hay=$(mysql -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='looart1' AND table_name='cotizaciones'")
+          if [ "$hay" = "1" ]; then
+            n=$(mysql -N -e "SELECT COUNT(*) FROM looart1.cotizaciones")
+            if [ "$n" -gt 0 ]; then echo "looart1 tiene $n cotizaciones: no se borra nada."; exit 1; fi
+          fi
+
+      - name: Activar CHECK en TiDB (sin esto se ignoran sin avisar)
+        run: |
+          mysql -e "SET GLOBAL tidb_enable_check_constraint = ON"
+          mysql -e "SELECT @@global.tidb_enable_check_constraint AS check_constraint"
+
+      - name: Restricciones de V001 y V002 (errores exactos) y reversión de V002
+        run: |
+          contar() { mysql --force looart1 < "$1" 2>&1 >/dev/null | grep -c '^ERROR' || true; }
+          esperar() { echo "$1: $2 errores (esperados: $3)"; test "$2" -eq "$3"; }
+          mysql -e "DROP DATABASE IF EXISTS looart1"
+          mysql < ../database/migrations/V001__esquema_inicial.sql
+          mysql < ../database/migrations/V002__catalogo_y_personalizacion.sql
+          esperar V001 "$(contar ../database/tests/V001__pruebas_restricciones.sql)" 22
+          esperar V002 "$(contar ../database/tests/V002__pruebas_restricciones.sql)" 8
+          mysql < ../database/migrations/reversion/V002__revertir.sql
+          esperar "V001 tras revertir V002" "$(contar ../database/tests/V001__pruebas_restricciones.sql)" 22
+
+      - name: Pruebas de integración contra TiDB (folios concurrentes, rollback, vistas, FOR UPDATE)
+        run: npm test
+
+      - name: npm run migrar en una base vacía (dos veces; la segunda no aplica nada)
+        run: |
+          mysql -e "DROP DATABASE IF EXISTS looart1"
+          npm run migrar
+          npm run migrar
+
+      - name: Dejar TiDB vacío
+        if: always()
+        run: mysql -e "DROP DATABASE IF EXISTS looart1"

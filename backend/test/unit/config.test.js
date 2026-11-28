@@ -118,3 +118,10 @@ test("URL_SITIO es obligatoria y debe ser un origen sin ruta", () => {
   );
   assert.equal(leerConfig({ ...ENV_OK }).urlSitio, "https://looart-web.pages.dev");
 });
+
+test("DB_TLS activa TLS hacia la BD; por omisión está apagado", () => {
+  assert.equal(leerConfig({ ...ENV_OK }).db.tls, false);
+  assert.equal(leerConfig({ ...ENV_OK, DB_TLS: "true" }).db.tls, true);
+  assert.equal(leerConfig({ ...ENV_OK, DB_TLS: "false" }).db.tls, false);
+  assert.throws(() => leerConfig({ ...ENV_OK, DB_TLS: "si" }), /DB_TLS/);
+});

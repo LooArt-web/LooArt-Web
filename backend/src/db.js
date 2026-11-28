@@ -1,16 +1,29 @@
 import mysql from "mysql2/promise";
 
 /**
+ * Opciones de conexión comunes al pool de la app y a las migraciones.
+ * Con `DB_TLS=true` (TiDB Cloud y cualquier BD fuera de la máquina) la conexión
+ * exige TLS 1.2 o superior y verifica el certificado del servidor.
+ */
+export function opcionesConexion(config) {
+  const o = {
+    host: config.db.host,
+    port: config.db.puerto,
+    user: config.db.usuario,
+    password: config.db.clave
+  };
+  if (config.db.tls) o.ssl = { minVersion: "TLSv1.2", rejectUnauthorized: true };
+  return o;
+}
+
+/**
  * Pool de conexiones a MySQL.
  * - decimalNumbers: false → DECIMAL llega como texto ("123.45"); se convierte con dominio/dinero.js.
  * - dateStrings: true    → DATETIME llega como texto, sin convertir a la zona del servidor ni a UTC.
  */
 export function crearPool(config) {
   return mysql.createPool({
-    host: config.db.host,
-    port: config.db.puerto,
-    user: config.db.usuario,
-    password: config.db.clave,
+    ...opcionesConexion(config),
     database: config.db.nombre,
     connectionLimit: 10,
     decimalNumbers: false,

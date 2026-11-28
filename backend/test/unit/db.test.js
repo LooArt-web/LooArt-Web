@@ -27,3 +27,14 @@ test("si el ROLLBACK también falla, se relanza el error ORIGINAL y se libera la
   );
   assert.deepEqual(pool.llamadas, ["begin", "rollback", "release"]);
 });
+
+test("con TLS, el pool exige TLS 1.2+ y verifica el certificado del servidor", async () => {
+  const { opcionesConexion } = await import("../../src/db.js");
+  const base = { host: "h", puerto: 4000, usuario: "u", clave: "c", nombre: "looart1" };
+  assert.equal(opcionesConexion({ db: { ...base, tls: false } }).ssl, undefined);
+  assert.deepEqual(opcionesConexion({ db: { ...base, tls: true } }).ssl, {
+    minVersion: "TLSv1.2",
+    rejectUnauthorized: true
+  });
+  assert.equal(opcionesConexion({ db: { ...base, tls: true } }).port, 4000);
+});

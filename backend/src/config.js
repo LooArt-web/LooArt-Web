@@ -27,6 +27,7 @@ const esquema = z
     DB_USUARIO: texto,
     DB_CLAVE: texto,
     DB_NOMBRE: texto,
+    DB_TLS: z.enum(["true", "false"]).default("false"),
     ORIGENES_PERMITIDOS: z
       .string()
       .transform((s) =>
@@ -84,7 +85,8 @@ export function leerConfig(env) {
       puerto: v.DB_PUERTO,
       usuario: v.DB_USUARIO,
       clave: v.DB_CLAVE,
-      nombre: v.DB_NOMBRE
+      nombre: v.DB_NOMBRE,
+      tls: v.DB_TLS === "true"
     },
     origenesPermitidos: v.ORIGENES_PERMITIDOS,
     secretoOrigen: v.SECRETO_ORIGEN ?? null,
