@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node src/servidor.js",
+    "migrar": "node --env-file-if-exists=.env scripts/migrar.js",
     "test": "node --env-file-if-exists=.env.test --test --test-concurrency=1 \"test/**/*.test.js\"",
     "test:unit": "node --test \"test/unit/**/*.test.js\"",
     "test:int": "node --env-file-if-exists=.env.test --test --test-concurrency=1 \"test/integracion/**/*.test.js\" \"test/seguridad/**/*.test.js\"",
